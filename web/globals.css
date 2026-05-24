@@ -1,0 +1,646 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────
+   CSS CUSTOM PROPERTIES
+───────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --color-surface: #F4F2EE;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-sunken: #EAE8E3;
+
+  /* Text */
+  --color-text-primary: #1C1C1A;
+  --color-text-secondary: #3A3A36;
+  --color-text-muted: #7A7A74;
+  --color-text-ghost: #B0AEA8;
+
+  /* Brand */
+  --color-sage: #7B9E87;
+  --color-sage-light: #A8C2B0;
+  --color-sage-dark: #4A6B55;
+  --color-warm: #C4956A;
+  --color-teal: #3D6B7A;
+
+  /* Borders */
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-border-soft: rgba(0, 0, 0, 0.04);
+
+  /* Glass */
+  --color-glass: rgba(255, 255, 255, 0.68);
+  --color-glass-border: rgba(255, 255, 255, 0.75);
+
+  /* Mood Colors */
+  --mood-calm-bg: rgba(123, 158, 135, 0.08);
+  --mood-calm-text: #4A6B55;
+  --mood-calm-border: rgba(123, 158, 135, 0.3);
+
+  --mood-reflective-bg: rgba(107, 124, 110, 0.08);
+  --mood-reflective-text: #445548;
+  --mood-reflective-border: rgba(107, 124, 110, 0.3);
+
+  --mood-hopeful-bg: rgba(196, 149, 106, 0.08);
+  --mood-hopeful-text: #7A5A35;
+  --mood-hopeful-border: rgba(196, 149, 106, 0.3);
+
+  --mood-overwhelmed-bg: rgba(61, 107, 122, 0.08);
+  --mood-overwhelmed-text: #2D4B5A;
+  --mood-overwhelmed-border: rgba(61, 107, 122, 0.3);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
+}
+
+/* ─────────────────────────────────────────────
+   DARK MODE
+───────────────────────────────────────────── */
+.dark {
+  --color-surface: #0F1210;
+  --color-surface-elevated: #161A16;
+  --color-surface-sunken: #0A0D0A;
+
+  --color-text-primary: #F0EDE8;
+  --color-text-secondary: #C8C5C0;
+  --color-text-muted: #7A7A74;
+  --color-text-ghost: #3A3A36;
+
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-soft: rgba(255, 255, 255, 0.04);
+
+  --color-glass: rgba(22, 26, 22, 0.75);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  --mood-calm-bg: rgba(123, 158, 135, 0.1);
+  --mood-calm-text: #8AB5A0;
+
+  --mood-reflective-bg: rgba(107, 124, 110, 0.1);
+  --mood-reflective-text: #8A9E8E;
+
+  --mood-hopeful-bg: rgba(196, 149, 106, 0.1);
+  --mood-hopeful-text: #C4956A;
+
+  --mood-overwhelmed-bg: rgba(61, 107, 122, 0.1);
+  --mood-overwhelmed-text: #4A8A9E;
+}
+
+/* ─────────────────────────────────────────────
+   BASE STYLES
+───────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+
+  font-family: 'DM Sans', sans-serif;
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Film Grain Overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+
+  pointer-events: none;
+  z-index: 9999;
+
+  opacity: 0.5;
+
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────
+   TYPOGRAPHY
+───────────────────────────────────────────── */
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-mono {
+  font-family: 'DM Mono', monospace;
+}
+
+.text-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-ghost);
+}
+
+.text-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   COMPONENTS
+───────────────────────────────────────────── */
+@layer components {
+
+  /* Glass */
+  .glass {
+    background: var(--color-glass);
+
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+
+    border: 1px solid var(--color-glass-border);
+  }
+
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.4);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .dark .glass-subtle {
+    background: rgba(22, 26, 22, 0.5);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+
+    transition:
+      transform 0.35s var(--ease-out),
+      border-color 0.3s ease,
+      background-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(123, 158, 135, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Buttons */
+  .button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 999px;
+
+    background: var(--color-sage);
+    color: white;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+      transform 0.3s var(--ease-out),
+      background-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .button-primary:hover {
+    background: var(--color-sage-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(123, 158, 135, 0.25);
+  }
+
+  .button-primary:active {
+    transform: scale(0.98);
+  }
+
+  .button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 22px;
+
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+
+    background: transparent;
+    color: var(--color-text-primary);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .button-secondary:hover {
+    background: var(--color-surface-sunken);
+    border-color: rgba(123, 158, 135, 0.2);
+    transform: translateY(-1px);
+  }
+
+  /* Inputs */
+  .input-field {
+    width: 100%;
+
+    padding: 14px 18px;
+
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
+
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+
+    font-size: 15px;
+
+    transition:
+      border-color 0.3s ease,
+      background-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .input-field::placeholder {
+    color: var(--color-text-ghost);
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: var(--color-sage);
+    box-shadow: 0 0 0 4px rgba(123, 158, 135, 0.12);
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border-soft);
+  }
+
+  /* Mood Badges */
+  .mood-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 4px 12px;
+
+    border-radius: 100px;
+    border: 1px solid;
+
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mood-badge-calm {
+    background: var(--mood-calm-bg);
+    color: var(--mood-calm-text);
+    border-color: var(--mood-calm-border);
+  }
+
+  .mood-badge-reflective {
+    background: var(--mood-reflective-bg);
+    color: var(--mood-reflective-text);
+    border-color: var(--mood-reflective-border);
+  }
+
+  .mood-badge-hopeful {
+    background: var(--mood-hopeful-bg);
+    color: var(--mood-hopeful-text);
+    border-color: var(--mood-hopeful-border);
+  }
+
+  .mood-badge-overwhelmed {
+    background: var(--mood-overwhelmed-bg);
+    color: var(--mood-overwhelmed-text);
+    border-color: var(--mood-overwhelmed-border);
+  }
+
+  /* Editor */
+  .tiptap-editor .ProseMirror {
+    outline: none;
+
+    min-height: 320px;
+
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.9;
+
+    color: var(--color-text-secondary);
+  }
+
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+
+    float: left;
+    height: 0;
+
+    pointer-events: none;
+
+    color: var(--color-text-ghost);
+    font-style: italic;
+  }
+
+  .tiptap-editor .ProseMirror strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .tiptap-editor .ProseMirror em {
+    font-style: italic;
+  }
+
+  .tiptap-editor .ProseMirror h2 {
+    margin: 1.5rem 0 0.5rem;
+
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+
+  .tiptap-editor .ProseMirror h3 {
+    margin: 1.2rem 0 0.4rem;
+
+    font-size: 1.25rem;
+    font-weight: 500;
+  }
+
+  .tiptap-editor .ProseMirror blockquote {
+    margin: 1rem 0;
+    padding-left: 1rem;
+
+    border-left: 2px solid var(--color-sage);
+
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  /* Skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-sunken) 25%,
+      var(--color-surface-elevated) 50%,
+      var(--color-surface-sunken) 75%
+    );
+
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+
+  /* Page Transition */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+
+    transition:
+      opacity 0.5s var(--ease-out),
+      transform 0.5s var(--ease-out);
+  }
+
+  /* Animation Helpers */
+  .floating {
+    animation: float 5s ease-in-out infinite;
+  }
+
+  .fade-in {
+    animation: fade-in 0.6s var(--ease-out);
+  }
+
+  .pulse-soft {
+    animation: pulse-soft 2.4s ease-in-out infinite;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────── */
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-elevated {
+  background-color: var(--color-surface-elevated);
+}
+
+.bg-sunken {
+  background-color: var(--color-surface-sunken);
+}
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-ghost {
+  color: var(--color-text-ghost);
+}
+
+.text-sage {
+  color: var(--color-sage);
+}
+
+.border-surface {
+  border-color: var(--color-border);
+}
+
+.border-soft {
+  border-color: var(--color-border-soft);
+}
+
+.shadow-soft {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.04);
+}
+
+.dark .shadow-soft {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.28);
+}
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-ghost);
+}
+
+/* ─────────────────────────────────────────────
+   SELECTION
+───────────────────────────────────────────── */
+::selection {
+  background: rgba(123, 158, 135, 0.25);
+  color: var(--color-text-primary);
+}
+
+/* ─────────────────────────────────────────────
+   LINKS
+───────────────────────────────────────────── */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-sage-dark);
+}
+
+/* ─────────────────────────────────────────────
+   IMAGES
+───────────────────────────────────────────── */
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ─────────────────────────────────────────────
+   FOCUS STATES
+───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-sage);
+  outline-offset: 3px;
+}
+
+/* ─────────────────────────────────────────────
+   REDUCED MOTION
+───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   MOBILE OPTIMIZATION
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  .text-display {
+    line-height: 1.15;
+  }
+
+  .card {
+    border-radius: 20px;
+  }
+
+  .button-primary,
+  .button-secondary {
+    width: 100%;
+  }
+
+  .tiptap-editor .ProseMirror {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+}

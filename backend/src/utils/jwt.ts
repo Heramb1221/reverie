@@ -84,12 +84,12 @@ export const getRefreshCookieOptions = () => ({
   secure: env.NODE_ENV === 'production',
   sameSite: 'strict' as const,
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  path: '/api/v1/auth',
+  path: '/',
 });
 
 export const getClearCookieOptions = () => ({
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
   sameSite: 'strict' as const,
-  path: '/api/v1/auth',
+  path: '/',
 });

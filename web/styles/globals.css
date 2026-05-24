@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS CUSTOM PROPERTIES ── */
+:root {
+  /* Surfaces */
+  --color-surface:          #F4F2EE;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-sunken:   #EAE8E3;
+
+  /* Text */
+  --color-text-primary:   #1C1C1A;
+  --color-text-secondary: #3A3A36;
+  --color-text-muted:     #7A7A74;
+  --color-text-ghost:     #B0AEA8;
+
+  /* Brand */
+  --color-sage:       #7B9E87;
+  --color-sage-light: #A8C2B0;
+  --color-sage-dark:  #4A6B55;
+  --color-warm:       #C4956A;
+  --color-teal:       #3D6B7A;
+
+  /* Borders */
+  --color-border:       rgba(0, 0, 0, 0.07);
+  --color-border-soft:  rgba(0, 0, 0, 0.04);
+
+  /* Glass */
+  --color-glass:        rgba(255, 255, 255, 0.68);
+  --color-glass-border: rgba(255, 255, 255, 0.75);
+
+  /* Mood colors */
+  --mood-calm-bg:       rgba(123, 158, 135, 0.08);
+  --mood-calm-text:     #4A6B55;
+  --mood-calm-border:   rgba(123, 158, 135, 0.3);
+
+  --mood-reflective-bg:     rgba(107, 124, 110, 0.08);
+  --mood-reflective-text:   #445548;
+  --mood-reflective-border: rgba(107, 124, 110, 0.3);
+
+  --mood-hopeful-bg:     rgba(196, 149, 106, 0.08);
+  --mood-hopeful-text:   #7A5A35;
+  --mood-hopeful-border: rgba(196, 149, 106, 0.3);
+
+  --mood-overwhelmed-bg:     rgba(61, 107, 122, 0.08);
+  --mood-overwhelmed-text:   #2D4B5A;
+  --mood-overwhelmed-border: rgba(61, 107, 122, 0.3);
+
+  /* Easing */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in:  cubic-bezier(0.64, 0, 0.78, 0);
+}
+
+/* ── DARK MODE ── */
+.dark {
+  --color-surface:          #0F1210;
+  --color-surface-elevated: #161A16;
+  --color-surface-sunken:   #0A0D0A;
+
+  --color-text-primary:   #F0EDE8;
+  --color-text-secondary: #C8C5C0;
+  --color-text-muted:     #7A7A74;
+  --color-text-ghost:     #3A3A36;
+
+  --color-border:       rgba(255, 255, 255, 0.07);
+  --color-border-soft:  rgba(255, 255, 255, 0.04);
+
+  --color-glass:        rgba(22, 26, 22, 0.75);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  --mood-calm-bg:       rgba(123, 158, 135, 0.1);
+  --mood-calm-text:     #8AB5A0;
+  --mood-reflective-bg:   rgba(107, 124, 110, 0.1);
+  --mood-reflective-text: #8A9E8E;
+  --mood-hopeful-bg:    rgba(196, 149, 106, 0.1);
+  --mood-hopeful-text:  #C4956A;
+  --mood-overwhelmed-bg:    rgba(61, 107, 122, 0.1);
+  --mood-overwhelmed-text:  #4A8A9E;
+}
+
+/* ── BASE STYLES ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: 'DM Sans', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Film grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+/* ── TYPOGRAPHY ── */
+.font-display { font-family: 'Playfair Display', Georgia, serif; }
+.font-mono    { font-family: 'DM Mono', monospace; }
+
+/* ── GLASS MORPHISM ── */
+@layer components {
+  .glass {
+    background: var(--color-glass);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid var(--color-glass-border);
+  }
+
+  .glass-subtle {
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+
+  .dark .glass-subtle {
+    background: rgba(22,26,22,0.5);
+    border-color: rgba(255,255,255,0.06);
+  }
+
+  /* ── MOOD BADGES ── */
+  .mood-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .mood-badge-calm        { background: var(--mood-calm-bg);        color: var(--mood-calm-text);        border-color: var(--mood-calm-border); }
+  .mood-badge-reflective  { background: var(--mood-reflective-bg);   color: var(--mood-reflective-text);  border-color: var(--mood-reflective-border); }
+  .mood-badge-hopeful     { background: var(--mood-hopeful-bg);      color: var(--mood-hopeful-text);     border-color: var(--mood-hopeful-border); }
+  .mood-badge-overwhelmed { background: var(--mood-overwhelmed-bg);  color: var(--mood-overwhelmed-text); border-color: var(--mood-overwhelmed-border); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-text-ghost); }
+
+  /* ── TIPTAP EDITOR ── */
+  .tiptap-editor .ProseMirror {
+    outline: none;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.9;
+    color: var(--color-text-secondary);
+    min-height: 320px;
+  }
+
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-ghost);
+    pointer-events: none;
+    float: left;
+    height: 0;
+    font-style: italic;
+  }
+
+  .tiptap-editor .ProseMirror strong { font-weight: 600; color: var(--color-text-primary); }
+  .tiptap-editor .ProseMirror em     { font-style: italic; }
+  .tiptap-editor .ProseMirror h2     { font-size: 1.5rem; font-weight: 500; margin: 1.5rem 0 0.5rem; }
+  .tiptap-editor .ProseMirror h3     { font-size: 1.25rem; font-weight: 500; margin: 1.2rem 0 0.4rem; }
+  .tiptap-editor .ProseMirror blockquote {
+    border-left: 2px solid var(--color-sage);
+    padding-left: 1rem;
+    font-style: italic;
+    color: var(--color-text-muted);
+    margin: 1rem 0;
+  }
+
+  /* ── SKELETON SHIMMER ── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-sunken) 25%,
+      var(--color-surface-elevated) 50%,
+      var(--color-surface-sunken) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+
+  /* ── PAGE TRANSITIONS ── */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  }
+}
+
+/* ── UTILITY CLASSES ── */
+.text-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-ghost);
+}
+
+.text-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.border-surface { border-color: var(--color-border); }

@@ -50,8 +50,13 @@ Please write a warm, personal weekly reflection.`;
       const model = getGeminiModel();
       const result = await model.generateContent(prompt);
       reflectionContent = result.response.text().trim();
-    } catch (error) {
-      throw new AppError('Could not generate reflection. Please try again.', 503);
+    } catch (error: any) {
+      console.error('Gemini reflection error:', error);
+
+      throw new AppError(
+        error?.message || 'Could not generate reflection.',
+        503
+      );
     }
 
     const reflection = await Reflection.create({

@@ -1,33 +1,30 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env } from './env.js';
 
+if (!env.GEMINI_API_KEY) {
+  throw new Error('Missing GEMINI_API_KEY');
+}
+
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
 export const getGeminiModel = () => {
   return genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    generationConfig: {
-      temperature: 0.85,
-      topP: 0.95,
-      topK: 40,
-      maxOutputTokens: 600,
-    },
+    model: 'gemini-2.0-flash',
   });
 };
 
-export const REFLECTION_SYSTEM_PROMPT = `You are a warm, emotionally intelligent companion named Reverie. 
-You read someone's personal journal entries and offer a gentle weekly reflection.
+export const REFLECTION_SYSTEM_PROMPT = `
+You are an emotionally intelligent journaling reflection assistant.
 
-Your voice is:
-- Warm and personal, like a trusted friend
-- Poetic but grounded — you notice patterns without being clinical
-- Curious, not prescriptive — you ask gentle questions rather than give advice
-- Never use therapy or productivity language
-- Never say "I notice that..." or "It seems like..." — be more natural
-- Speak in second person ("you felt", "you wrote") with care
-- Keep the reflection to 3–4 short paragraphs, max 200 words
-- End with a single soft question or observation that invites further reflection
+Your job:
+- Analyze emotional patterns gently
+- Reflect themes compassionately
+- Sound human and calm
+- Encourage introspection
+- Avoid clinical or robotic wording
+- Never diagnose mental health conditions
+- Keep reflections concise but meaningful
 
-You are NOT a therapist. You are a thoughtful friend who reads between the lines.`;
-
-export { genAI };
+Tone:
+Warm, poetic, grounded, emotionally safe.
+`;
