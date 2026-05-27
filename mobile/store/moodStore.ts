@@ -7,6 +7,6 @@ interface MoodState {
 }
 
 export const useMoodStore = create<MoodState>()((set) => ({
-  activeMood: 'calm',
+  activeMood: 'Calm',
   setMood: (m) => set({ activeMood: m }),
 }));

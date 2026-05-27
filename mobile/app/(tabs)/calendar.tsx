@@ -1,7 +1,7 @@
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,15 +11,18 @@ import {
 } from 'date-fns';
 import { journalApi } from '../../lib/api';
 import { useMoodStore } from '../../store/moodStore';
-import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG } from '../../lib/theme';
+import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG, MoodType } from '../../lib/theme';
 import { useHaptics } from '../../hooks/useHaptics';
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 export default function CalendarScreen() {
   const insets       = useSafeAreaInsets();
+  const router       = useRouter();
   const { activeMood } = useMoodStore();
-  const config       = MOOD_CONFIG[activeMood];
+  
+  const currentMood  = activeMood && MOOD_CONFIG[activeMood as MoodType] ? activeMood : 'Calm';
+  const config       = MOOD_CONFIG[currentMood as MoodType];
   const haptics      = useHaptics();
 
   const [current, setCurrent]       = useState(new Date());
@@ -72,7 +75,7 @@ export default function CalendarScreen() {
 
           {/* Day headers */}
           <View style={styles.dayHeaders}>
-            {DAY_LABELS.map(d => (
+            ={DAY_LABELS.map(d => (
               <Text key={d} style={styles.dayLabel}>{d}</Text>
             ))}
           </View>
@@ -89,7 +92,6 @@ export default function CalendarScreen() {
               const hasEntries = dayEntries.length > 0;
               const isSelected = selected && isSameDay(day, selected);
               const todayDay   = isToday(day);
-              const primaryMood = dayEntries[0]?.mood;
 
               return (
                 <TouchableOpacity
@@ -115,7 +117,7 @@ export default function CalendarScreen() {
                       {dayEntries.slice(0, 3).map((e, i) => (
                         <View
                           key={i}
-                          style={[styles.dot, { backgroundColor: MOOD_CONFIG[e.mood as keyof typeof MOOD_CONFIG].hex }]}
+                          style={[styles.dot, { backgroundColor: MOOD_CONFIG[e.mood as MoodType]?.hex || Colors.textGhost }]}
                         />
                       ))}
                     </View>
@@ -127,7 +129,8 @@ export default function CalendarScreen() {
 
           {/* Legend */}
           <View style={styles.legend}>
-            {(['calm', 'reflective', 'hopeful', 'overwhelmed'] as const).map(m => (
+            {/* FIX: Standardized loop configuration iteration keys to utilize valid PascalCase properties */}
+            {(['Calm', 'Reflective', 'Hopeful', 'Overwhelmed'] as const).map(m => (
               <View key={m} style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: MOOD_CONFIG[m].hex }]} />
                 <Text style={styles.legendText}>{m}</Text>
@@ -148,9 +151,9 @@ export default function CalendarScreen() {
                 <TouchableOpacity
                   key={entry._id}
                   style={styles.entryRow}
-                  onPress={() => router.push(`/journal/${entry._id}`)}
+                  onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry._id } })}
                 >
-                  <View style={[styles.entryMoodDot, { backgroundColor: MOOD_CONFIG[entry.mood as keyof typeof MOOD_CONFIG].hex }]} />
+                  <View style={[styles.entryMoodDot, { backgroundColor: MOOD_CONFIG[entry.mood as MoodType]?.hex || Colors.textGhost }]} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.entryTitle} numberOfLines={1}>
                       {entry.title?.replace(/<[^>]*>/g, '') || 'Untitled entry'}
@@ -163,7 +166,8 @@ export default function CalendarScreen() {
             ) : (
               <View style={styles.noDayEntry}>
                 <Text style={styles.noDayText}>No entries on this day</Text>
-                <TouchableOpacity onPress={() => router.push('/journal/new')}>
+                {/* FIX: Updated routing params property to look up valid target directory components */}
+                <TouchableOpacity onPress={() => router.push('/(tabs)/new-entry')}>
                   <Text style={[styles.noDayLink, { color: config.hex }]}>Write one →</Text>
                 </TouchableOpacity>
               </View>

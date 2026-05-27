@@ -34,6 +34,7 @@ app.use(cors({
       env.CLIENT_URL,
       'http://localhost:3000',
       'http://localhost:8081',
+      'http://127.0.0.1:8081',
     ];
     if (!origin || allowed.includes(origin)) {
       callback(null, true);

@@ -7,12 +7,15 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "build:android": "eas build --platform android",
-    "build:ios": "eas build --platform ios"
+    "build:ios": "eas build --platform ios",
+    "ts:check": "tsc --noEmit"
   },
   "dependencies": {
     "@expo-google-fonts/dm-mono": "^0.2.3",
     "@expo-google-fonts/dm-sans": "^0.2.3",
     "@expo-google-fonts/playfair-display": "^0.2.3",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/netinfo": "11.3.1",
     "@shopify/flash-list": "1.6.3",
     "@tanstack/react-query": "^5.32.0",
     "axios": "^1.6.8",
@@ -46,6 +49,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
+    "@types/node": "^20.12.7",
     "@types/react": "~18.2.79",
     "typescript": "^5.4.5"
   }

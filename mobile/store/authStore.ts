@@ -1,70 +1,89 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export interface User {
-  _id: string;
+interface User {
+  id: string;
   name: string;
   email: string;
-  avatar?: string;
-  theme: 'light' | 'dark';
   onboardingComplete: boolean;
-  createdAt: string;
 }
 
 interface AuthState {
   user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  token: string | null;
   hydrated: boolean;
-  login:  (user: User, access: string, refresh: string) => Promise<void>;
+  login: (user: User, accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
-  setUser: (user: User) => void;
-  updateUser: (partial: Partial<User>) => void;
   hydrate: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()((set, get) => ({
-  user:            null,
-  isAuthenticated: false,
-  isLoading:       false,
-  hydrated:        false,
+const isWeb = Platform.OS === 'web';
 
-  hydrate: async () => {
+const setStorageItem = async (key: string, value: string) => {
+  if (isWeb) {
+    await AsyncStorage.setItem(key, value);
+  } else {
+    await SecureStore.setItemAsync(key, value);
+  }
+};
+
+const getStorageItem = async (key: string): Promise<string | null> => {
+  if (isWeb) {
+    return await AsyncStorage.getItem(key);
+  } else {
+    return await SecureStore.getItemAsync(key);
+  }
+};
+
+const removeStorageItem = async (key: string) => {
+  if (isWeb) {
+    await AsyncStorage.removeItem(key);
+  } else {
+    await SecureStore.deleteItemAsync(key);
+  }
+};
+
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  token: null,
+  hydrated: false,
+
+  login: async (user, accessToken, refreshToken) => {
     try {
-      const token = await SecureStore.getItemAsync('access_token');
-      const raw   = await SecureStore.getItemAsync('user');
-      if (token && raw) {
-        const user = JSON.parse(raw);
-        set({ user, isAuthenticated: true, hydrated: true });
-      } else {
-        set({ hydrated: true });
-      }
-    } catch {
-      set({ hydrated: true });
+      await setStorageItem('access_token', accessToken);
+      await setStorageItem('refresh_token', refreshToken);
+      await setStorageItem('user_session', JSON.stringify(user));
+      set({ user, token: accessToken });
+    } catch (e) {
+      console.error('Failed to store auth session securely:', e);
     }
   },
 
-  login: async (user, access, refresh) => {
-    await SecureStore.setItemAsync('access_token',  access);
-    await SecureStore.setItemAsync('refresh_token', refresh);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
-    set({ user, isAuthenticated: true });
-  },
-
   logout: async () => {
-    await SecureStore.deleteItemAsync('access_token');
-    await SecureStore.deleteItemAsync('refresh_token');
-    await SecureStore.deleteItemAsync('user');
-    set({ user: null, isAuthenticated: false });
+    try {
+      await removeStorageItem('access_token');
+      await removeStorageItem('refresh_token');
+      await removeStorageItem('user_session');
+      set({ user: null, token: null });
+    } catch (e) {
+      console.error('Failed to clear secure store:', e);
+    }
   },
 
-  setUser: (user) => set({ user }),
+  hydrate: async () => {
+    try {
+      const accessToken = await getStorageItem('access_token');
+      const userSession = await getStorageItem('user_session');
 
-  updateUser: (partial) => {
-    const next = get().user ? { ...get().user!, ...partial } : null;
-    if (next) {
-      SecureStore.setItemAsync('user', JSON.stringify(next)).catch(() => {});
-      set({ user: next });
+      if (accessToken && userSession) {
+        set({ token: accessToken, user: JSON.parse(userSession) });
+      }
+    } catch (e) {
+      console.error('Failed to restore secure auth state:', e);
+    } finally {
+      set({ hydrated: true });
     }
   },
 }));

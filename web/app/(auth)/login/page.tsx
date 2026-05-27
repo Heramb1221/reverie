@@ -17,18 +17,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
 
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: () => authApi.login({ email, password }),
-    onSuccess: (res) => {
-      const { user, accessToken } = res.data.data;
-      login(user, accessToken);
-      toast.success(`Welcome back, ${user.name.split(' ')[0]}`);
-      router.push(user.onboardingComplete ? '/home' : '/onboarding');
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || 'Login failed');
-    },
-  });
+const { mutate, isPending, error } = useMutation({
+  mutationFn: () => authApi.login({ email, password }),
+  onSuccess: (res) => {
+    const { user, accessToken } = res.data.data;
+    login(user, accessToken);
+    toast.success(`Welcome back, ${user.name.split(' ')[0]}`);
+    router.push(user.onboardingComplete ? '/home' : '/onboarding');
+  },
+
+  onError: (err: any) => {
+  console.log("Error details:", err.response?.data || err.message);
+  
+  const msg = err.response?.data?.message || 'Login failed. Please check your network connection.';
+  toast.error(msg);
+},
+});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

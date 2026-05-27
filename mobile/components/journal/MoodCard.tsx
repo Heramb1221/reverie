@@ -18,12 +18,14 @@ export function MoodCard({ mood, selected, onSelect, size = 'md' }: Props) {
     onSelect(mood);
   };
 
+  const backgroundAlphaColor = `${config.hex}12`;
+
   return (
     <TouchableOpacity
       style={[
         styles.card,
         size === 'sm' ? styles.cardSm : styles.cardMd,
-        selected && { borderColor: config.hex, backgroundColor: config.bg },
+        selected && { borderColor: config.hex, backgroundColor: backgroundAlphaColor },
         !selected && styles.cardDefault,
       ]}
       onPress={handlePress}
@@ -41,14 +43,14 @@ export function MoodCard({ mood, selected, onSelect, size = 'md' }: Props) {
         {config.label}
       </Text>
       {size === 'md' && (
-        <Text style={styles.desc}>{config.description}</Text>
+        <Text style={styles.desc}>{config.atmosphere}</Text>
       )}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  card:        { alignItems: 'center', borderRadius: Radius.xl, borderWidth: 1.5, overflow: 'hidden', position: 'relative' },
+  card:         { alignItems: 'center', borderRadius: Radius.xl, borderWidth: 1.5, overflow: 'hidden', position: 'relative' },
   cardDefault: { backgroundColor: 'rgba(255,255,255,0.6)', borderColor: Colors.border },
   cardSm:      { padding: Space[3], gap: 4, flex: 1 },
   cardMd:      { padding: Space[4], gap: Space[2], flex: 1 },

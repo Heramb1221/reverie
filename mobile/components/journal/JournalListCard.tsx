@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG, MoodType } from '../../lib/theme';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -26,7 +27,12 @@ function stripHtml(html: string) {
 }
 
 export function JournalListCard({ entry, onPress }: Props) {
-  const config = MOOD_CONFIG[entry.mood];
+  const currentMood = entry.mood && MOOD_CONFIG[entry.mood] ? entry.mood : 'Calm';
+  const config = MOOD_CONFIG[currentMood];
+
+  const backgroundAlphaColor = `${config.hex}15`; 
+  const borderAlphaColor     = `${config.hex}30`;
+  const textContrastColor    = config.hex;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
@@ -35,9 +41,9 @@ export function JournalListCard({ entry, onPress }: Props) {
 
       <View style={styles.body}>
         {/* Mood badge */}
-        <View style={[styles.badge, { backgroundColor: config.bg, borderColor: config.border }]}>
+        <View style={[styles.badge, { backgroundColor: backgroundAlphaColor, borderColor: borderAlphaColor }]}>
           <Text style={styles.badgeEmoji}>{config.emoji}</Text>
-          <Text style={[styles.badgeText, { color: config.text }]}>{config.label}</Text>
+          <Text style={[styles.badgeText, { color: textContrastColor }]}>{config.label}</Text>
         </View>
 
         {/* Title */}

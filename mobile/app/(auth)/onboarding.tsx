@@ -28,7 +28,7 @@ export default function OnboardingScreen() {
   const config         = MOOD_CONFIG[activeMood];
 
   const [step, setStep]           = useState(1);
-  const [selectedMood, setMoodLocal] = useState<MoodType>('calm');
+  const [selectedMood, setMoodLocal] = useState<MoodType>('Calm');
 
   const current = STEPS[step - 1];
 
@@ -81,7 +81,7 @@ export default function OnboardingScreen() {
         {/* Step 2: mood selector */}
         {step === 2 && (
           <View style={styles.moodGrid}>
-            {(['calm', 'reflective', 'hopeful', 'overwhelmed'] as MoodType[]).map(m => (
+            {(['Calm', 'Reflective', 'Hopeful', 'Overwhelmed'] as MoodType[]).map(m => (
               <MoodCard key={m} mood={m} selected={selectedMood === m} onSelect={handleMoodSelect} />
             ))}
           </View>

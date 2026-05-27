@@ -1,6 +1,12 @@
-import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Switch, Alert,
+import { 
+  View, 
+  Text, 
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ScrollView,
+  Switch,
+  Platform
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,7 +24,7 @@ export default function ProfileScreen() {
   const insets         = useSafeAreaInsets();
   const { user, logout } = useAuthStore();
   const { activeMood } = useMoodStore();
-  const config         = MOOD_CONFIG[activeMood];
+  const config         = MOOD_CONFIG[activeMood || 'Calm'];
   const haptics        = useHaptics();
   const { enabled: biometricEnabled, supported, enrolled, toggleBiometric } = useBiometric();
 
@@ -38,7 +44,9 @@ export default function ProfileScreen() {
           text: 'Sign out',
           style: 'destructive',
           onPress: async () => {
-            try { await authApi.logout({}); } catch {}
+            try { 
+              await authApi.logout(); 
+            } catch {}
             await logout();
             haptics.medium();
             router.replace('/(auth)/login');
@@ -132,8 +140,8 @@ export default function ProfileScreen() {
 
         {/* Account */}
         <Section title="Account">
-          <Row label="Edit profile"   onPress={() => router.push('/profile/edit')} />
-          <Row label="Settings"       onPress={() => router.push('/settings')} />
+          <Row label="Edit profile"   onPress={() => Toast.show({ type: 'info', text1: 'Profile modifications coming soon' })} />
+          <Row label="Settings"       onPress={() => Toast.show({ type: 'info', text1: 'Settings management coming soon' })} />
           <Row label="Export data"    onPress={() => Toast.show({ type: 'info', text1: 'Export coming soon' })} last />
         </Section>
 
@@ -150,7 +158,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: Colors.surface },
-  scroll: { padding: Space[5], paddingBottom: 120 },
+  scroll: { padding: Space[6], paddingBottom: 120 },
 
   avatarSection: { alignItems: 'center', marginBottom: Space[6] },
   avatar:        { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: Space[3] },
@@ -160,13 +168,13 @@ const styles = StyleSheet.create({
   memberSince:   { fontFamily: Fonts.mono, fontSize: 10, color: Colors.textGhost, marginTop: Space[2] },
 
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Space[3], marginBottom: Space[6] },
-  statCard:  { flex: 1, minWidth: '45%', backgroundColor: Colors.surfaceElevated, borderRadius: Radius.lg, padding: Space[4], alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 },
+  statCard:  { flex: 1, minWidth: '45%', backgroundColor: Colors.surfaceElevated, borderRadius: Radius.lg, padding: Space[4], alignItems: 'center', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 }, android: { elevation: 1 }, web: { boxShadow: '0px 1px 8px rgba(0,0,0,0.04)' } }) },
   statValue: { fontFamily: Fonts.displayMedium, fontSize: FontSizes.xl, color: Colors.textPrimary },
   statLabel: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: Colors.textGhost, marginTop: 4 },
 
-  section:      { marginBottom: Space[5] },
+  section:      { marginBottom: Space[6] },
   sectionTitle: { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost, marginBottom: Space[2], marginLeft: Space[1] },
-  sectionCard:  { backgroundColor: Colors.surfaceElevated, borderRadius: Radius.xl, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 },
+  sectionCard:  { backgroundColor: Colors.surfaceElevated, borderRadius: Radius['2xl'], overflow: 'hidden', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 }, android: { elevation: 1 }, web: { boxShadow: '0px 1px 8px rgba(0,0,0,0.04)' } }) },
 
   row:           { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Space[4], paddingVertical: Space[4] },
   rowBorder:     { borderBottomWidth: 1, borderBottomColor: Colors.border },

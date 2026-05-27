@@ -1,14 +1,14 @@
 import { useEffect, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { journalApi } from '../lib/api';
+import { journalApi, JournalPayload } from '../lib/api';
 
 const QUEUE_KEY = 'reverie_offline_queue';
 
 interface QueuedEntry {
   id:        string;
   type:      'create' | 'update' | 'delete';
-  payload:   object;
+  payload:   { id?: string; data?: Partial<JournalPayload> };
   timestamp: number;
 }
 
@@ -16,7 +16,7 @@ export function useOfflineSync() {
   const isSyncing = useRef(false);
 
   const enqueue = useCallback(async (item: Omit<QueuedEntry, 'id' | 'timestamp'>) => {
-    const raw   = await AsyncStorage.getItem(QUEUE_KEY);
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
     const queue: QueuedEntry[] = raw ? JSON.parse(raw) : [];
     queue.push({ ...item, id: Date.now().toString(), timestamp: Date.now() });
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
@@ -36,17 +36,15 @@ export function useOfflineSync() {
 
       for (const item of queue) {
         try {
-          if (item.type === 'create') {
-            await journalApi.create(item.payload);
-          } else if (item.type === 'update') {
-            const { id, ...rest } = item.payload as { id: string };
-            await journalApi.update(id, rest);
-          } else if (item.type === 'delete') {
-            const { id } = item.payload as { id: string };
-            await journalApi.delete(id);
+          if (item.type === 'create' && item.payload.data) {
+            await journalApi.create(item.payload.data as JournalPayload);
+          } else if (item.type === 'update' && item.payload.id && item.payload.data) {
+            await journalApi.update(item.payload.id, item.payload.data);
+          } else if (item.type === 'delete' && item.payload.id) {
+            await journalApi.delete(item.payload.id);
           }
-        } catch {
-          // Keep failed items in queue
+        } catch (error) {
+          // Keep failed items in queue for next connectivity window
           remaining.push(item);
         }
       }
@@ -57,10 +55,11 @@ export function useOfflineSync() {
     }
   }, []);
 
-  // Flush when network comes back online
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      if (state.isConnected) flush();
+      if (state.isConnected) {
+        flush();
+      }
     });
     return unsubscribe;
   }, [flush]);

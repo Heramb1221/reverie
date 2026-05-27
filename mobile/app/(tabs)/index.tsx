@@ -1,23 +1,22 @@
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  RefreshControl, ImageBackground,
+  RefreshControl, ImageBackground, Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { journalApi, reflectionApi } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
-import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG } from '../../lib/theme';
-import { MoodCard } from '../../components/journal/MoodCard';
+import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG, MoodType } from '../../lib/theme';
 import { JournalListCard } from '../../components/journal/JournalListCard';
-import { useState } from 'react';
 
 const BG_IMAGES: Record<string, any> = {
-  calm:        require('../../assets/backgrounds/hero.jpg'),
-  reflective:  require('../../assets/backgrounds/emotional.jpg'),
-  hopeful:     require('../../assets/backgrounds/secondary.jpg'),
-  overwhelmed: require('../../assets/backgrounds/dashboard.jpg'),
+  Calm:        require('../../assets/backgrounds/hero.jpg'),
+  Reflective:  require('../../assets/backgrounds/emotional.jpg'),
+  Hopeful:     require('../../assets/backgrounds/secondary.jpg'),
+  Overwhelmed: require('../../assets/backgrounds/dashboard.jpg'),
 };
 
 const PROMPTS = [
@@ -34,9 +33,13 @@ function getGreeting() {
 
 export default function HomeScreen() {
   const insets       = useSafeAreaInsets();
+  const router       = useRouter();
   const { user }     = useAuthStore();
   const { activeMood } = useMoodStore();
-  const config       = MOOD_CONFIG[activeMood];
+  
+  // Guard fallback value checking to enforce strict indexing rules
+  const currentMood = (activeMood && MOOD_CONFIG[activeMood as MoodType]) ? activeMood : 'Calm';
+  const config       = MOOD_CONFIG[currentMood as MoodType];
   const [refreshing, setRefreshing] = useState(false);
 
   const prompt = PROMPTS[new Date().getDay() % PROMPTS.length];
@@ -70,14 +73,14 @@ export default function HomeScreen() {
     <View style={[styles.root, { backgroundColor: Colors.surface }]}>
       {/* Atmospheric background */}
       <ImageBackground
-        source={BG_IMAGES[activeMood]}
+        source={BG_IMAGES[currentMood as keyof typeof BG_IMAGES]}
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
       >
         <View style={[StyleSheet.absoluteFill, {
-          backgroundColor: activeMood === 'calm' ? 'rgba(244,242,238,0.88)'
-            : activeMood === 'reflective' ? 'rgba(242,244,242,0.88)'
-            : activeMood === 'hopeful'    ? 'rgba(250,247,242,0.88)'
+          backgroundColor: currentMood === 'Calm' ? 'rgba(244,242,238,0.88)'
+            : currentMood === 'Reflective' ? 'rgba(242,244,242,0.88)'
+            : currentMood === 'Hopeful'    ? 'rgba(250,247,242,0.88)'
             : 'rgba(240,244,246,0.88)',
         }]} />
       </ImageBackground>
@@ -99,7 +102,7 @@ export default function HomeScreen() {
         {/* Quick write prompt */}
         <TouchableOpacity
           style={[styles.promptCard, { borderColor: `${config.hex}30` }]}
-          onPress={() => router.push('/journal/new')}
+          onPress={() => router.push('/(tabs)/new-entry')}
           activeOpacity={0.85}
         >
           <View style={styles.promptTop}>
@@ -130,7 +133,7 @@ export default function HomeScreen() {
         {reflection && (
           <TouchableOpacity
             style={[styles.reflectionCard, { backgroundColor: `${config.hex}10`, borderColor: `${config.hex}25` }]}
-            onPress={() => router.push('/reflection')}
+            onPress={() => router.push('/(tabs)/reflection')}
             activeOpacity={0.85}
           >
             <View style={styles.reflectionHeader}>
@@ -147,7 +150,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent entries</Text>
-            <TouchableOpacity onPress={() => router.push('/search')}>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/calendar')}>
               <Text style={[styles.sectionLink, { color: config.hex }]}>View all</Text>
             </TouchableOpacity>
           </View>
@@ -157,7 +160,7 @@ export default function HomeScreen() {
               <JournalListCard
                 key={entry._id}
                 entry={entry}
-                onPress={() => router.push(`/journal/${entry._id}`)}
+                onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry._id } })}
               />
             ))
           ) : (
@@ -181,7 +184,7 @@ const styles = StyleSheet.create({
   name:        { fontFamily: Fonts.displayMedium, fontSize: FontSizes['3xl'], color: Colors.textPrimary, letterSpacing: -0.5, lineHeight: 40 },
   date:        { fontFamily: Fonts.sans, fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: 4 },
 
-  promptCard:  { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.xl, padding: Space[5], borderWidth: 1, marginBottom: Space[4], shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12 },
+  promptCard:  { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.xl, padding: Space[5], borderWidth: 1, marginBottom: Space[4], ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12 }, android: { elevation: 2 }, web: { boxShadow: '0px 2px 12px rgba(0,0,0,0.06)' } }) },
   promptTop:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Space[2] },
   promptLabel: { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost },
   promptEmoji: { fontSize: 22 },
@@ -190,7 +193,7 @@ const styles = StyleSheet.create({
   promptBtnText: { fontFamily: Fonts.sansMedium, fontSize: FontSizes.sm, color: '#fff' },
 
   statsRow:  { flexDirection: 'row', gap: Space[3], marginBottom: Space[4] },
-  statCard:  { flex: 1, backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.lg, padding: Space[4], alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 },
+  statCard:  { flex: 1, backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.lg, padding: Space[4], alignItems: 'center', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 }, android: { elevation: 1 }, web: { boxShadow: '0px 1px 8px rgba(0,0,0,0.04)' } }) },
   statValue: { fontFamily: Fonts.displayMedium, fontSize: FontSizes.xl, color: Colors.textPrimary },
   statLabel: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: Colors.textGhost, marginTop: 4 },
 
