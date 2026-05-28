@@ -6,10 +6,11 @@
     "orientation": "portrait",
     "scheme": "reverie",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "backgroundColor": "#F4F2EE"
-    },
+    "splash": { "backgroundColor": "#F4F2EE" },
     "assetBundlePatterns": ["**/*"],
+    "extra": {
+      "apiUrl": "http://localhost:5000/api/v1"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.reverie.journal",
@@ -34,9 +35,10 @@
       "expo-font",
       "expo-secure-store",
       "expo-local-authentication",
-      ["expo-image-picker", {
-        "photosPermission": "Reverie needs access to choose photos for your journal."
-      }]
+      [
+        "expo-image-picker",
+        { "photosPermission": "Reverie needs access to choose photos for your journal." }
+      ]
     ],
     "experiments": { "typedRoutes": true }
   }

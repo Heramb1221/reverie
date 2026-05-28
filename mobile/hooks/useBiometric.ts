@@ -1,89 +1,50 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
-const BIOMETRIC_STORE_KEY = 'reverie_biometric_enabled';
+const LOCK_KEY = 'biometric_lock_enabled';
 
 export function useBiometric() {
   const [supported, setSupported] = useState(false);
-  const [enrolled, setEnrolled] = useState(false);
-  const [enabled, setEnabled] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [enrolled,  setEnrolled]  = useState(false);
+  const [enabled,   setEnabled]   = useState(false);
+  const [locked,    setLocked]    = useState(false);
 
-  // Checks device hardware capabilities
   useEffect(() => {
-    async function checkHardwareSupport() {
-      try {
-        const hasHardware = await LocalAuthentication.hasHardwareAsync();
-        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-        
-        setSupported(hasHardware);
-        setEnrolled(isEnrolled);
-
-        if (hasHardware && isEnrolled) {
-          const storedValue = await SecureStore.getItemAsync(BIOMETRIC_STORE_KEY);
-          setEnabled(storedValue === 'true');
-        }
-      } catch (error) {
-        console.warn('Biometric hardware check failed:', error);
-      } finally {
-        setChecking(false);
-      }
-    }
-
-    checkHardwareSupport();
+    let mounted = true;
+    (async () => {
+      const hw  = await LocalAuthentication.hasHardwareAsync();
+      const enr = await LocalAuthentication.isEnrolledAsync();
+      const raw = await SecureStore.getItemAsync(LOCK_KEY);
+      if (!mounted) return;
+      setSupported(hw);
+      setEnrolled(enr);
+      setEnabled(raw === 'true');
+      if (raw === 'true' && hw && enr) setLocked(true);
+    })();
+    return () => { mounted = false; };
   }, []);
 
-  const toggleBiometric = useCallback(async (shouldEnable: boolean) => {
-    if (!supported || !enrolled) {
-      throw new Error('Biometric authentication is not supported or enrolled on this device.');
-    }
-
-    if (shouldEnable) {
-      // Prompt user to verify identity before locking system configuration keys
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Confirm identity to enable biometric security lock',
-        fallbackLabel: 'Use passcode',
-        disableDeviceFallback: false,
-      });
-
-      if (!result.success) {
-        throw new Error('Authentication challenge failed.');
-      }
-    }
-
-    if (shouldEnable) {
-      await SecureStore.setItemAsync(BIOMETRIC_STORE_KEY, 'true');
-    } else {
-      await SecureStore.deleteItemAsync(BIOMETRIC_STORE_KEY);
-    }
-    
-    setEnabled(shouldEnable);
-    return true;
+  const authenticate = useCallback(async (): Promise<boolean> => {
+    if (!supported || !enrolled) return true;
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage:         'Unlock Reverie',
+      fallbackLabel:         'Use passcode',
+      cancelLabel:           'Cancel',
+      disableDeviceFallback: false,
+    });
+    if (result.success) setLocked(false);
+    return result.success;
   }, [supported, enrolled]);
 
-  const authenticateGate = useCallback(async (): Promise<boolean> => {
-    if (!supported || !enrolled || !enabled) {
-      return true; // Pass through if security parameters aren't configured
+  const toggleBiometric = useCallback(async (value: boolean): Promise<void> => {
+    if (value) {
+      const ok = await authenticate();
+      if (!ok) return;
     }
+    await SecureStore.setItemAsync(LOCK_KEY, String(value));
+    setEnabled(value);
+  }, [authenticate]);
 
-    try {
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Unlock your Reverie Repository',
-        fallbackLabel: 'Use passcode',
-      });
-      return result.success;
-    } catch {
-      return false;
-    }
-  }, [supported, enrolled, enabled]);
-
-  return {
-    supported,
-    enrolled,
-    enabled,
-    checking,
-    toggleBiometric,
-    authenticateGate,
-  };
+  return { supported, enrolled, enabled, locked, authenticate, toggleBiometric };
 }

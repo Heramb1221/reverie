@@ -1,173 +1,203 @@
-import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  RefreshControl, ImageBackground, Platform,
+  View, Text, ScrollView, StyleSheet,
+  TouchableOpacity, RefreshControl, ImageBackground,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { journalApi, reflectionApi } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
-import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG, MoodType } from '../../lib/theme';
+import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG } from '../../lib/theme';
 import { JournalListCard } from '../../components/journal/JournalListCard';
-
-const BG_IMAGES: Record<string, any> = {
-  Calm:        require('../../assets/backgrounds/hero.jpg'),
-  Reflective:  require('../../assets/backgrounds/emotional.jpg'),
-  Hopeful:     require('../../assets/backgrounds/secondary.jpg'),
-  Overwhelmed: require('../../assets/backgrounds/dashboard.jpg'),
-};
 
 const PROMPTS = [
   'What small thing made you pause today?',
   'Describe your mood as a weather pattern.',
   'What are you grateful for right now?',
   'What feeling has followed you this week?',
+  'What did you notice today that surprised you?',
+  'How does your body feel in this moment?',
+  'What would you say to yourself a year from now?',
 ];
 
 function getGreeting() {
   const h = new Date().getHours();
-  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function getPrompt() {
+  return PROMPTS[new Date().getDay() % PROMPTS.length];
+}
+
+interface JournalEntry {
+  _id: string;
+  title: string;
+  contentPreview?: string;
+  mood: 'calm' | 'reflective' | 'hopeful' | 'overwhelmed';
+  wordCount: number;
+  createdAt: string;
+}
+
+interface Stats {
+  totalEntries?: number;
+  currentStreak?: number;
+  totalWords?: number;
 }
 
 export default function HomeScreen() {
   const insets       = useSafeAreaInsets();
-  const router       = useRouter();
   const { user }     = useAuthStore();
   const { activeMood } = useMoodStore();
-  
-  // Guard fallback value checking to enforce strict indexing rules
-  const currentMood = (activeMood && MOOD_CONFIG[activeMood as MoodType]) ? activeMood : 'Calm';
-  const config       = MOOD_CONFIG[currentMood as MoodType];
+  const config       = MOOD_CONFIG[activeMood];
   const [refreshing, setRefreshing] = useState(false);
 
-  const prompt = PROMPTS[new Date().getDay() % PROMPTS.length];
-
-  const { data: journalData, refetch: refetchJournals } = useQuery({
+  const { data: journalData, refetch } = useQuery({
     queryKey: ['journals-mobile'],
-    queryFn: () => journalApi.list({ page: 1, limit: 4 }),
+    queryFn:  () => journalApi.list({ page: 1, limit: 5 }),
   });
 
   const { data: statsData } = useQuery({
     queryKey: ['stats-mobile'],
-    queryFn: () => journalApi.stats(),
+    queryFn:  () => journalApi.stats(),
   });
 
   const { data: reflectionData } = useQuery({
     queryKey: ['reflection-latest-mobile'],
-    queryFn: () => reflectionApi.latest(),
+    queryFn:  () => reflectionApi.latest(),
   });
 
-  const entries    = journalData?.data?.data?.entries    || [];
-  const stats      = statsData?.data?.data?.stats        || {};
-  const reflection = reflectionData?.data?.data?.reflection;
+  const entries: JournalEntry[]    = (journalData?.data?.data?.entries  as JournalEntry[])   ?? [];
+  const stats:   Stats             = (statsData?.data?.data?.stats       as Stats)            ?? {};
+  const reflection                 = (reflectionData?.data?.data?.reflection as { content?: string } | null) ?? null;
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetchJournals();
+    await refetch();
     setRefreshing(false);
   };
 
+  const overlayColor =
+    activeMood === 'calm'        ? 'rgba(244,242,238,0.88)'
+    : activeMood === 'reflective' ? 'rgba(242,244,242,0.88)'
+    : activeMood === 'hopeful'    ? 'rgba(250,247,242,0.88)'
+    : 'rgba(240,244,246,0.88)';
+
   return (
-    <View style={[styles.root, { backgroundColor: Colors.surface }]}>
-      {/* Atmospheric background */}
-      <ImageBackground
-        source={BG_IMAGES[currentMood as keyof typeof BG_IMAGES]}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      >
-        <View style={[StyleSheet.absoluteFill, {
-          backgroundColor: currentMood === 'Calm' ? 'rgba(244,242,238,0.88)'
-            : currentMood === 'Reflective' ? 'rgba(242,244,242,0.88)'
-            : currentMood === 'Hopeful'    ? 'rgba(250,247,242,0.88)'
-            : 'rgba(240,244,246,0.88)',
-        }]} />
-      </ImageBackground>
+    <View style={s.root}>
+      {/* Atmospheric tint background */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
 
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + Space[4], paddingBottom: 100 }]}
+        contentContainerStyle={[s.scroll, { paddingTop: insets.top + Space[4], paddingBottom: 110 }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={config.hex} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={config.hex} />
+        }
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.greeting}>{getGreeting()}</Text>
-          <Text style={styles.name}>{user?.name?.split(' ')[0] || 'Friend'}</Text>
-          <Text style={styles.date}>
+        <View style={s.header}>
+          <Text style={s.greeting}>{getGreeting()}</Text>
+          <Text style={s.name}>{user?.name?.split(' ')[0] ?? 'Friend'}</Text>
+          <Text style={s.date}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </Text>
         </View>
 
         {/* Quick write prompt */}
         <TouchableOpacity
-          style={[styles.promptCard, { borderColor: `${config.hex}30` }]}
-          onPress={() => router.push('/(tabs)/new-entry')}
+          style={[s.promptCard, { borderColor: `${config.hex}35` }]}
+          onPress={() => router.push('/journal/new' as `/${string}`)}
           activeOpacity={0.85}
         >
-          <View style={styles.promptTop}>
-            <Text style={styles.promptLabel}>Today's prompt</Text>
-            <Text style={[styles.promptEmoji]}>{config.emoji}</Text>
+          <View style={s.promptTop}>
+            <Text style={s.promptLabel}>Today's prompt</Text>
+            <Text style={s.promptEmoji}>{config.emoji}</Text>
           </View>
-          <Text style={styles.promptText}>"{prompt}"</Text>
-          <View style={[styles.promptBtn, { backgroundColor: config.hex }]}>
-            <Text style={styles.promptBtnText}>Begin writing</Text>
+          <Text style={s.promptText}>"{getPrompt()}"</Text>
+          <View style={[s.promptBtn, { backgroundColor: config.hex }]}>
+            <Text style={s.promptBtnText}>Begin writing</Text>
           </View>
         </TouchableOpacity>
 
         {/* Stats row */}
-        <View style={styles.statsRow}>
+        <View style={s.statsRow}>
           {[
-            { label: 'Entries',  value: stats.totalEntries  ?? '—' },
-            { label: 'Streak',   value: stats.currentStreak ? `${stats.currentStreak}d` : '—' },
-            { label: 'Words',    value: stats.totalWords    ? `${Math.round(stats.totalWords / 1000)}k` : '—' },
-          ].map(s => (
-            <View key={s.label} style={styles.statCard}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+            { label: 'Entries', value: String(stats.totalEntries ?? '—') },
+            { label: 'Streak',  value: stats.currentStreak ? `${stats.currentStreak}d` : '—' },
+            { label: 'Words',   value: stats.totalWords ? `${Math.round(stats.totalWords / 1000)}k` : '—' },
+          ].map(stat => (
+            <View key={stat.label} style={s.statCard}>
+              <Text style={s.statValue}>{stat.value}</Text>
+              <Text style={s.statLabel}>{stat.label}</Text>
             </View>
           ))}
         </View>
 
-        {/* AI Reflection teaser */}
-        {reflection && (
+        {/* AI reflection teaser */}
+        {reflection?.content && (
           <TouchableOpacity
-            style={[styles.reflectionCard, { backgroundColor: `${config.hex}10`, borderColor: `${config.hex}25` }]}
-            onPress={() => router.push('/(tabs)/reflection')}
+            style={[s.reflectionCard, { backgroundColor: `${config.hex}12`, borderColor: `${config.hex}28` }]}
+            onPress={() => router.push('/(tabs)/reflection' as `/${string}`)}
             activeOpacity={0.85}
           >
-            <View style={styles.reflectionHeader}>
-              <Text style={[styles.reflectionIcon, { color: config.hex }]}>✦</Text>
-              <Text style={[styles.reflectionLabel, { color: config.hex }]}>Weekly reflection</Text>
+            <View style={s.reflectionHeader}>
+              <Text style={[s.reflectionIcon, { color: config.hex }]}>✦</Text>
+              <Text style={[s.reflectionLabel, { color: config.hex }]}>Weekly reflection</Text>
             </View>
-            <Text style={styles.reflectionPreview} numberOfLines={3}>
-              "{reflection.content?.slice(0, 140)}…"
+            <Text style={s.reflectionPreview} numberOfLines={2}>
+              "{reflection.content.slice(0, 140)}…"
             </Text>
           </TouchableOpacity>
         )}
 
+        {/* Quick actions */}
+        <View style={s.quickRow}>
+          <TouchableOpacity style={s.quickCard} onPress={() => router.push('/capsules' as `/${string}`)} activeOpacity={0.85}>
+            <Text style={s.quickIcon}>🔒</Text>
+            <Text style={s.quickTitle}>Capsules</Text>
+            <Text style={s.quickSub}>Write to future you</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.quickCard} onPress={() => router.push('/search' as `/${string}`)} activeOpacity={0.85}>
+            <Text style={s.quickIcon}>🔍</Text>
+            <Text style={s.quickTitle}>Search</Text>
+            <Text style={s.quickSub}>Find any memory</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Recent entries */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent entries</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/calendar')}>
-              <Text style={[styles.sectionLink, { color: config.hex }]}>View all</Text>
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Recent entries</Text>
+            <TouchableOpacity onPress={() => router.push('/search' as `/${string}`)}>
+              <Text style={[s.sectionLink, { color: config.hex }]}>View all →</Text>
             </TouchableOpacity>
           </View>
 
           {entries.length > 0 ? (
-            entries.map((entry: any) => (
+            entries.map(entry => (
               <JournalListCard
                 key={entry._id}
                 entry={entry}
-                onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry._id } })}
+                onPress={() => router.push(`/journal/${entry._id}` as `/${string}`)}
               />
             ))
           ) : (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyIcon}>🌱</Text>
-              <Text style={styles.emptyTitle}>Your journal is waiting</Text>
-              <Text style={styles.emptyDesc}>Write your first entry — even a sentence counts.</Text>
+            <View style={s.empty}>
+              <Text style={s.emptyIcon}>🌱</Text>
+              <Text style={s.emptyTitle}>Your journal is waiting</Text>
+              <Text style={s.emptySub}>
+                No entries yet. Write your first thought — even a single sentence is a start.
+              </Text>
+              <TouchableOpacity
+                style={[s.emptyBtn, { backgroundColor: config.hex }]}
+                onPress={() => router.push('/journal/new' as `/${string}`)}
+              >
+                <Text style={s.emptyBtnText}>Write something</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -176,40 +206,45 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root:        { flex: 1 },
-  scroll:      { paddingHorizontal: Space[5] },
-  header:      { marginBottom: Space[6] },
-  greeting:    { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost, marginBottom: 4 },
-  name:        { fontFamily: Fonts.displayMedium, fontSize: FontSizes['3xl'], color: Colors.textPrimary, letterSpacing: -0.5, lineHeight: 40 },
-  date:        { fontFamily: Fonts.sans, fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: 4 },
-
-  promptCard:  { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.xl, padding: Space[5], borderWidth: 1, marginBottom: Space[4], ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12 }, android: { elevation: 2 }, web: { boxShadow: '0px 2px 12px rgba(0,0,0,0.06)' } }) },
-  promptTop:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Space[2] },
-  promptLabel: { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost },
-  promptEmoji: { fontSize: 22 },
-  promptText:  { fontFamily: Fonts.displayItalic, fontSize: FontSizes.lg, color: Colors.textSecondary, lineHeight: 28, marginBottom: Space[4] },
-  promptBtn:   { alignSelf: 'flex-start', paddingHorizontal: Space[4], paddingVertical: Space[2], borderRadius: Radius.full },
-  promptBtnText: { fontFamily: Fonts.sansMedium, fontSize: FontSizes.sm, color: '#fff' },
-
-  statsRow:  { flexDirection: 'row', gap: Space[3], marginBottom: Space[4] },
-  statCard:  { flex: 1, backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.lg, padding: Space[4], alignItems: 'center', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8 }, android: { elevation: 1 }, web: { boxShadow: '0px 1px 8px rgba(0,0,0,0.04)' } }) },
-  statValue: { fontFamily: Fonts.displayMedium, fontSize: FontSizes.xl, color: Colors.textPrimary },
-  statLabel: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: Colors.textGhost, marginTop: 4 },
-
-  reflectionCard:   { borderRadius: Radius.xl, padding: Space[4], borderWidth: 1, marginBottom: Space[4] },
-  reflectionHeader: { flexDirection: 'row', alignItems: 'center', gap: Space[2], marginBottom: Space[2] },
-  reflectionIcon:   { fontFamily: Fonts.mono, fontSize: FontSizes.base },
-  reflectionLabel:  { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase' },
-  reflectionPreview:{ fontFamily: Fonts.displayItalic, fontSize: FontSizes.base, color: Colors.textMuted, lineHeight: 24 },
-
-  section:       { marginTop: Space[2] },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Space[3] },
-  sectionTitle:  { fontFamily: Fonts.displayMedium, fontSize: FontSizes.lg, color: Colors.textPrimary },
-  sectionLink:   { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 1 },
-
-  emptyCard:  { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: Radius.xl, padding: Space[10], alignItems: 'center' },
-  emptyIcon:  { fontSize: 36, marginBottom: Space[3] },
-  emptyTitle: { fontFamily: Fonts.displayMedium, fontSize: FontSizes.md, color: Colors.textPrimary, marginBottom: Space[2] },
-  emptyDesc:  { fontFamily: Fonts.sansLight, fontSize: FontSizes.sm, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
+const s = StyleSheet.create({
+  root:           { flex: 1, backgroundColor: Colors.surface },
+  scroll:         { paddingHorizontal: Space[5] },
+  header:         { marginBottom: Space[5] },
+  greeting:       { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost, marginBottom: 4 },
+  name:           { fontFamily: Fonts.displayMedium, fontSize: FontSizes['3xl'], color: Colors.textPrimary, letterSpacing: -0.5, lineHeight: 40 },
+  date:           { fontFamily: Fonts.sans, fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: 4 },
+  promptCard:     { backgroundColor: 'rgba(255,255,255,0.68)', borderRadius: Radius.xl, padding: Space[5], borderWidth: 1, marginBottom: Space[4],
+                    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+  promptTop:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Space[2] },
+  promptLabel:    { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost },
+  promptEmoji:    { fontSize: 22 },
+  promptText:     { fontFamily: Fonts.display, fontSize: FontSizes.lg, color: Colors.textSecondary, lineHeight: 28, marginBottom: Space[4], fontStyle: 'italic' },
+  promptBtn:      { alignSelf: 'flex-start', paddingHorizontal: Space[4], paddingVertical: Space[2], borderRadius: Radius.full },
+  promptBtnText:  { fontFamily: Fonts.sansMedium, fontSize: FontSizes.sm, color: '#fff' },
+  statsRow:       { flexDirection: 'row', gap: Space[3], marginBottom: Space[4] },
+  statCard:       { flex: 1, backgroundColor: 'rgba(255,255,255,0.68)', borderRadius: Radius.lg, padding: Space[4], alignItems: 'center',
+                    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1 },
+  statValue:      { fontFamily: Fonts.displayMedium, fontSize: FontSizes.xl, color: Colors.textPrimary },
+  statLabel:      { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: Colors.textGhost, marginTop: 4 },
+  reflectionCard: { borderRadius: Radius.xl, padding: Space[4], borderWidth: 1, marginBottom: Space[4] },
+  reflectionHeader:{ flexDirection: 'row', alignItems: 'center', gap: Space[2], marginBottom: Space[2] },
+  reflectionIcon: { fontFamily: Fonts.mono, fontSize: FontSizes.base },
+  reflectionLabel:{ fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase' },
+  reflectionPreview:{ fontFamily: Fonts.display, fontSize: FontSizes.base, color: Colors.textMuted, lineHeight: 24, fontStyle: 'italic' },
+  quickRow:       { flexDirection: 'row', gap: Space[3], marginBottom: Space[4] },
+  quickCard:      { flex: 1, backgroundColor: 'rgba(255,255,255,0.68)', borderRadius: Radius.xl, padding: Space[4],
+                    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1 },
+  quickIcon:      { fontSize: 22, marginBottom: Space[2] },
+  quickTitle:     { fontFamily: Fonts.sansMedium, fontSize: FontSizes.sm, color: Colors.textPrimary },
+  quickSub:       { fontFamily: Fonts.sans, fontSize: FontSizes.xs, color: Colors.textGhost, marginTop: 2 },
+  section:        { marginBottom: Space[4] },
+  sectionHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Space[3] },
+  sectionTitle:   { fontFamily: Fonts.displayMedium, fontSize: FontSizes.lg, color: Colors.textPrimary },
+  sectionLink:    { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 1 },
+  empty:          { backgroundColor: 'rgba(255,255,255,0.68)', borderRadius: Radius.xl, padding: Space[10], alignItems: 'center' },
+  emptyIcon:      { fontSize: 36, marginBottom: Space[3] },
+  emptyTitle:     { fontFamily: Fonts.displayMedium, fontSize: FontSizes.md, color: Colors.textPrimary, marginBottom: Space[2] },
+  emptySub:       { fontFamily: Fonts.sans, fontSize: FontSizes.sm, color: Colors.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: Space[5] },
+  emptyBtn:       { paddingHorizontal: Space[5], paddingVertical: Space[3], borderRadius: Radius.full },
+  emptyBtnText:   { fontFamily: Fonts.sansMedium, fontSize: FontSizes.sm, color: '#fff' },
 });

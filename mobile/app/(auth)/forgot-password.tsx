@@ -1,206 +1,99 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, KeyboardAvoidingView, Platform,
+} from 'react-native';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { authApi } from '../../lib/api';
-import { Colors, Fonts } from '../../lib/theme';
+import { Colors, Fonts, FontSizes, Space, Radius } from '../../lib/theme';
 
 export default function ForgotPasswordScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [sent,  setSent]  = useState(false);
 
-  const handleSubmit = async () => {
-    if (!email.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Please enter your email address.',
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await authApi.forgotPassword({ email: email.trim().toLowerCase() });
-      setSubmitted(true);
-      Toast.show({
-        type: 'success',
-        text1: 'Email Sent',
-        text2: 'Check your inbox for a reset token link.',
-      });
-    } catch (error: any) {
-      const serverMessage = error.response?.data?.message || 'Failed to request reset token.';
-      Toast.show({
-        type: 'error',
-        text1: 'Request Failed',
-        text2: serverMessage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => authApi.forgotPassword({ email }),
+    onSuccess: () => {
+      setSent(true);
+      Toast.show({ type: 'success', text1: 'Check your inbox' });
+    },
+    onError: () => {
+      // Always show success to prevent email enumeration
+      setSent(true);
+    },
+  });
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back to Login</Text>
-        </Pressable>
-      </View>
+    <KeyboardAvoidingView
+      style={[s.root, { paddingTop: insets.top + Space[4] }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <TouchableOpacity onPress={() => router.back()} style={s.back}>
+        <Text style={s.backText}>← Back</Text>
+      </TouchableOpacity>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Recover Memory Capsule</Text>
-        <Text style={styles.subtitle}>
-          {submitted 
-            ? "We've dispatched password recovery procedures to your email address."
-            : "Enter your registered email below, and we'll transmit instructions to securely restore your repository access."}
-        </Text>
+      {sent ? (
+        <View style={s.center}>
+          <Text style={s.icon}>✉️</Text>
+          <Text style={s.title}>Check your inbox</Text>
+          <Text style={s.sub}>
+            If that email exists in Reverie, a reset link is on its way. Check your spam too.
+          </Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/login' as `/${string}`)}>
+            <Text style={s.link}>Return to sign in →</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={s.form}>
+          <Text style={s.title}>Reset password</Text>
+          <Text style={s.sub}>We'll send a reset link to your email.</Text>
 
-        {!submitted ? (
-          <View style={styles.form}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="name@domain.com"
-              placeholderTextColor={Colors.textGhost}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              onChangeText={setEmail}
-              editable={!loading}
-            />
+          <Text style={s.label}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="your@email.com"
+            placeholderTextColor={Colors.textGhost}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={s.input}
+          />
 
-            <Pressable 
-              onPress={handleSubmit} 
-              style={({ pressed }) => [
-                styles.submitButton,
-                pressed && { opacity: 0.8 },
-                loading && { backgroundColor: Colors.borderLight }
-              ]}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.textGhost} />
-              ) : (
-                <Text style={styles.submitButtonText}>Send Reset Instructions</Text>
-              )}
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable 
-            onPress={() => router.replace('/(auth)/login')}
-            style={({ pressed }) => [styles.doneButton, pressed && { opacity: 0.8 }]}
+          <TouchableOpacity
+            style={[s.btn, (!email || isPending) && s.btnDisabled]}
+            onPress={() => mutate()}
+            disabled={!email || isPending}
           >
-            <Text style={styles.doneButtonText}>Return to Login</Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
+            <Text style={s.btnText}>
+              {isPending ? 'Sending…' : 'Send reset link'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bgLight,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  backBtn: {
-    paddingVertical: 8,
-  },
-  backText: {
-    fontFamily: Fonts.mono,
-    fontSize: 14,
-    color: Colors.textGhost,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-    marginTop: -40, // Visual centering balancing spacing constraints
-  },
-  title: {
-    fontFamily: Fonts.displayBold,
-    fontSize: 32,
-    color: Colors.textLight,
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontFamily: Fonts.sans, // FIX: Updated key from Fonts.body to Fonts.sans
-    fontSize: 16,
-    color: Colors.textGhost,
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  form: {
-    width: '100%',
-  },
-  label: {
-    fontFamily: Fonts.mono,
-    fontSize: 12,
-    color: Colors.textLight,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  input: {
-    fontFamily: Fonts.sans, // FIX: Updated key from Fonts.body to Fonts.sans
-    fontSize: 16,
-    color: Colors.textLight,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 24,
-  },
-  submitButton: {
-    backgroundColor: Colors.textLight,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-      web: {
-        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.05)',
-      },
-    }),
-  },
-  submitButtonText: {
-    fontFamily: Fonts.sansMedium, // FIX: Updated key from Fonts.bodyMedium to Fonts.sansMedium
-    fontSize: 16,
-    color: '#FFF',
-  },
-  doneButton: {
-    borderWidth: 1,
-    borderColor: Colors.textLight,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneButtonText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 16,
-    color: Colors.textLight,
-  },
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: Colors.surface, paddingHorizontal: Space[6] },
+  back:   { marginBottom: Space[10] },
+  backText: { fontFamily: Fonts.mono, fontSize: FontSizes.xs, color: Colors.textGhost, letterSpacing: 1 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Space[4], paddingBottom: Space[16] },
+  form:   { flex: 1, justifyContent: 'center', gap: Space[4], paddingBottom: Space[16] },
+  icon:   { fontSize: 48 },
+  title:  { fontFamily: Fonts.displayMedium, fontSize: FontSizes.xl, color: Colors.textPrimary, letterSpacing: -0.3 },
+  sub:    { fontFamily: Fonts.sans, fontSize: FontSizes.sm, color: Colors.textMuted, lineHeight: 22 },
+  label:  { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost },
+  input:  { backgroundColor: Colors.surfaceSunken, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border,
+            paddingHorizontal: Space[4], paddingVertical: Space[3],
+            fontFamily: Fonts.sans, fontSize: FontSizes.base, color: Colors.textPrimary },
+  btn:    { backgroundColor: Colors.sageDark, borderRadius: Radius.full, paddingVertical: Space[4], alignItems: 'center' },
+  btnDisabled: { opacity: 0.5 },
+  btnText:{ fontFamily: Fonts.sansMedium, fontSize: FontSizes.base, color: '#fff' },
+  link:   { fontFamily: Fonts.mono, fontSize: FontSizes.xs, color: Colors.sageDark, letterSpacing: 1 },
 });

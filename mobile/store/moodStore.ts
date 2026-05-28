@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MoodType } from '../lib/theme';
+import type { MoodType } from '../lib/theme';
 
 interface MoodState {
   activeMood: MoodType;
@@ -7,6 +7,6 @@ interface MoodState {
 }
 
 export const useMoodStore = create<MoodState>()((set) => ({
-  activeMood: 'Calm',
+  activeMood: 'calm',
   setMood: (m) => set({ activeMood: m }),
 }));
