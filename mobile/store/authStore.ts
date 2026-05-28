@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../lib/storage';
 
 export interface User {
   _id: string;
@@ -17,54 +17,139 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   hydrated: boolean;
+
   hydrate: () => Promise<void>;
-  login: (user: User, access: string, refresh: string) => Promise<void>;
+
+  login: (
+    user: User,
+    access: string,
+    refresh: string
+  ) => Promise<void>;
+
   logout: () => Promise<void>;
+
   setUser: (user: User) => void;
-  updateUser: (partial: Partial<User>) => void;
+
+  updateUser: (
+    partial: Partial<User>
+  ) => void;
 }
 
-export const useAuthStore = create<AuthState>()((set, get) => ({
-  user: null,
-  isAuthenticated: false,
-  hydrated: false,
+export const useAuthStore = create<AuthState>(
+  (set, get) => ({
+    user: null,
 
-  hydrate: async () => {
-    try {
-      const token = await SecureStore.getItemAsync('access_token');
-      const raw   = await SecureStore.getItemAsync('user_data');
-      if (token && raw) {
-        const user = JSON.parse(raw) as User;
-        set({ user, isAuthenticated: true, hydrated: true });
-      } else {
-        set({ hydrated: true });
+    isAuthenticated: false,
+
+    hydrated: false,
+
+    hydrate: async () => {
+      try {
+        const token =
+          await storage.getItem(
+            'access_token'
+          );
+
+        const raw =
+          await storage.getItem(
+            'user_data'
+          );
+
+        if (token && raw) {
+          const user = JSON.parse(raw) as User;
+
+          set({
+            user,
+            isAuthenticated: true,
+            hydrated: true,
+          });
+        } else {
+          set({
+            hydrated: true,
+          });
+        }
+      } catch (error) {
+        console.log(
+          'HYDRATE ERROR:',
+          error
+        );
+
+        set({
+          hydrated: true,
+        });
       }
-    } catch {
-      set({ hydrated: true });
-    }
-  },
+    },
 
-  login: async (user, access, refresh) => {
-    await SecureStore.setItemAsync('access_token',  access);
-    await SecureStore.setItemAsync('refresh_token', refresh);
-    await SecureStore.setItemAsync('user_data',     JSON.stringify(user));
-    set({ user, isAuthenticated: true });
-  },
+    login: async (
+      user,
+      access,
+      refresh
+    ) => {
+      await storage.setItem(
+        'access_token',
+        access
+      );
 
-  logout: async () => {
-    await SecureStore.deleteItemAsync('access_token');
-    await SecureStore.deleteItemAsync('refresh_token');
-    await SecureStore.deleteItemAsync('user_data');
-    set({ user: null, isAuthenticated: false });
-  },
+      await storage.setItem(
+        'refresh_token',
+        refresh
+      );
 
-  setUser: (user) => set({ user }),
+      await storage.setItem(
+        'user_data',
+        JSON.stringify(user)
+      );
 
-  updateUser: (partial) => {
-    const current = get().user;
-    if (!current) return;
-    const next = { ...current, ...partial };
-    SecureStore.setItemAsync('user_data', JSON.stringify(next)).catch(() => {});
-    set({ user: next });
-  },
-}));
+      set({
+        user,
+        isAuthenticated: true,
+      });
+    },
+
+    logout: async () => {
+      await storage.removeItem(
+        'access_token'
+      );
+
+      await storage.removeItem(
+        'refresh_token'
+      );
+
+      await storage.removeItem(
+        'user_data'
+      );
+
+      set({
+        user: null,
+        isAuthenticated: false,
+      });
+    },
+
+    setUser: (user) =>
+      set({
+        user,
+      }),
+
+    updateUser: (partial) => {
+      const current = get().user;
+
+      if (!current) return;
+
+      const next = {
+        ...current,
+        ...partial,
+      };
+
+      storage
+        .setItem(
+          'user_data',
+          JSON.stringify(next)
+        )
+        .catch(console.error);
+
+      set({
+        user: next,
+      });
+    },
+  })
+);

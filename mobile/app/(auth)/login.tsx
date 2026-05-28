@@ -33,11 +33,24 @@ export default function LoginScreen() {
       Toast.show({ type: 'success', text1: `Welcome back, ${user.name.split(' ')[0]}` });
       router.replace((user.onboardingComplete ? '/(tabs)' : '/(auth)/onboarding') as `/${string}`);
     },
-    onError: (err: unknown) => {
-      haptics.error();
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      Toast.show({ type: 'error', text1: msg ?? 'Login failed' });
-    },
+onError: (err: any) => {
+  console.log('LOGIN ERROR');
+  console.log('MESSAGE:', err.message);
+  console.log('STATUS:', err.response?.status);
+  console.log('DATA:', err.response?.data);
+
+  haptics.error();
+
+  const msg =
+    err?.response?.data?.message ??
+    'Login failed';
+
+  Toast.show({
+    type: 'error',
+    text1: msg,
+  });
+},
+
   });
 
   const canSubmit = email.length > 0 && password.length > 0 && !isPending;
