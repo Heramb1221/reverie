@@ -72,6 +72,7 @@ export default function NewEntryPage() {
     mutationFn: () => journalApi.create({
       title: title.trim() || `Entry — ${new Date().toLocaleDateString()}`,
       content,
+      plainTextContent: stripHtml(content),
       contentPreview: stripHtml(content).slice(0, 200),
       mood,
       wordCount: countWords(content),

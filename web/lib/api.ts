@@ -9,7 +9,7 @@ export const api = axios.create({
   timeout: 15000,
 });
 
-// ── REQUEST INTERCEPTOR: attach access token ──
+// REQUEST INTERCEPTOR: attach access token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('reverie_access_token');
@@ -20,7 +20,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// ── RESPONSE INTERCEPTOR: silent refresh on 401 ──
+// RESPONSE INTERCEPTOR: silent refresh on 401
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (v: string) => void; reject: (e: unknown) => void }> = [];
 
@@ -68,7 +68,7 @@ api.interceptors.response.use(
   }
 );
 
-// ── TYPED API HELPERS ──
+// TYPED API HELPERS
 export const authApi = {
   signup:           (d: object) => api.post('/auth/signup', d),
   login:            (d: object) => api.post('/auth/login', d),
@@ -94,7 +94,7 @@ export const reflectionApi = {
   list:     (p?: object) => api.get('/reflection', { params: p }),
   latest:   ()           => api.get('/reflection/latest'),
   get:      (id: string) => api.get(`/reflection/${id}`),
-  generate: ()           => api.post('/reflection/generate'),
+  generate: (payload?: { forceRegenerate?: boolean }) => api.post('/reflection/generate', payload ?? {}),
 };
 
 export const capsuleApi = {

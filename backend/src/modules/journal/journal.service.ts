@@ -7,6 +7,7 @@ interface CreateEntryInput {
   userId: string;
   title: string;
   content: string;
+  plainTextContent?: string;
   contentPreview: string;
   mood: MoodType;
   wordCount: number;
@@ -21,13 +22,21 @@ interface UpdateEntryInput extends Partial<CreateEntryInput> {
 }
 
 export class JournalService {
+  private toPlainText(content: string): string {
+    return content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
   // CREATE
   async createEntry(data: CreateEntryInput): Promise<IJournalEntry> {
+    const normalizedPlainText = (data.plainTextContent || this.toPlainText(data.content)).slice(0, 20000);
     const entry = await JournalEntry.create({
       userId: new mongoose.Types.ObjectId(data.userId),
       title: data.title,
       content: data.content,
+      plainTextContent: normalizedPlainText,
       contentPreview: data.contentPreview,
       mood: data.mood,
       wordCount: data.wordCount,
@@ -87,9 +96,16 @@ export class JournalService {
       throw new AppError('Invalid entry ID', 400);
     }
 
+    const updatePayload: Partial<UpdateEntryInput> = { ...updates };
+    if (typeof updates.content === 'string') {
+      updatePayload.plainTextContent = this.toPlainText(updates.content).slice(0, 20000);
+    } else if (typeof updates.plainTextContent === 'string') {
+      updatePayload.plainTextContent = updates.plainTextContent.slice(0, 20000);
+    }
+
     const entry = await JournalEntry.findOneAndUpdate(
       { _id: entryId, userId: new mongoose.Types.ObjectId(userId!) },
-      { $set: updates },
+      { $set: updatePayload },
       { new: true, runValidators: true }
     );
 
@@ -115,7 +131,6 @@ export class JournalService {
   }
 
   // CALENDAR VIEW
-  // Returns lightweight entries for a given month
   async getCalendarEntries(
     userId: string,
     year: number,
@@ -214,7 +229,7 @@ export class JournalService {
       userId: new mongoose.Types.ObjectId(userId),
       createdAt: { $gte: weekStart, $lte: weekEnd },
     })
-      .select('content mood createdAt wordCount')
+      .select('content plainTextContent contentPreview mood createdAt wordCount')
       .sort({ createdAt: 1 })
       .lean();
   }

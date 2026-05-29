@@ -2,10 +2,10 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 
-// ── CLASS NAMES ──
+// CLASS NAMES
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
-// ── DATE FORMATTING ──
+// DATE FORMATTING
 export const formatEntryDate = (date: string | Date): string => {
   const d = new Date(date);
   if (isToday(d))     return `Today · ${format(d, 'h:mm a')}`;
@@ -22,27 +22,27 @@ export const formatCalendarDate = (date: string | Date): string =>
 export const formatMonthYear = (date: Date): string =>
   format(date, 'MMMM yyyy');
 
-// ── WORD COUNT ──
+// WORD COUNT
 export const countWords = (html: string): number => {
   const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   return text ? text.split(' ').length : 0;
 };
 
-// ── READING TIME ──
+// READING TIME
 export const readingTime = (wordCount: number): string => {
   const mins = Math.ceil(wordCount / 200);
   return mins <= 1 ? '1 min read' : `${mins} min read`;
 };
 
-// ── TRUNCATE ──
+// TRUNCATE
 export const truncate = (text: string, length = 120): string =>
   text.length > length ? text.slice(0, length) + '…' : text;
 
-// ── STRIP HTML ──
+// STRIP HTML
 export const stripHtml = (html: string): string =>
   html.replace(/<[^>]*>/g, '');
 
-// ── CAPSULE COUNTDOWN ──
+// CAPSULE COUNTDOWN
 export const getCapsuleCountdown = (unlockDate: Date | string): string => {
   const diff = new Date(unlockDate).getTime() - Date.now();
   if (diff <= 0) return 'Ready to open';
@@ -54,7 +54,7 @@ export const getCapsuleCountdown = (unlockDate: Date | string): string => {
   return `${m}m`;
 };
 
-// ── MOOD EMOJI ──
+// MOOD EMOJI
 export const MOOD_EMOJI: Record<string, string> = {
   calm:        '🌿',
   reflective:  '🌧',
@@ -62,7 +62,7 @@ export const MOOD_EMOJI: Record<string, string> = {
   overwhelmed: '🌊',
 };
 
-// ── LOCAL STORAGE SAFE ACCESS ──
+// LOCAL STORAGE SAFE ACCESS
 export const safeLocalStorage = {
   get: (key: string) => {
     if (typeof window === 'undefined') return null;

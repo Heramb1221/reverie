@@ -41,7 +41,7 @@ export default function EntryDetailPage() {
   });
 
   const { mutate: save, isPending: saving } = useMutation({
-    mutationFn: () => journalApi.update(id, { title, content, contentPreview: stripHtml(content).slice(0, 200), mood, wordCount: countWords(content) }),
+    mutationFn: () => journalApi.update(id, { title, content, plainTextContent: stripHtml(content), contentPreview: stripHtml(content).slice(0, 200), mood, wordCount: countWords(content) }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['journal', id] }); qc.invalidateQueries({ queryKey: ['journals'] }); toast.success('Entry saved'); setEditing(false); },
     onError: () => toast.error('Could not save entry'),
   });

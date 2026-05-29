@@ -7,9 +7,8 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { storage } from './storage';
 
-// Fix: use Constants instead of process.env
 const BASE_URL =
-  'http://10.163.190.246:5000/api/v1';
+  'http://localhost:5000/api/v1';
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -250,9 +249,10 @@ export const reflectionApi = {
   list: () =>
     api.get('/reflection'),
 
-  generate: () =>
+  generate: (payload?: { forceRegenerate?: boolean }) =>
     api.post(
-      '/reflection/generate'
+      '/reflection/generate',
+      payload ?? {}
     ),
 
   get: (id: string) =>

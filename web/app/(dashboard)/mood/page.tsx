@@ -94,7 +94,7 @@ export default function MoodPage() {
         </div>
       )}
 
-      <QuoteCard />
+      <QuoteCard quote={''} />
     </div>
   );
 }

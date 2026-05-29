@@ -13,6 +13,7 @@ export interface IJournalEntry extends Document {
   userId: mongoose.Types.ObjectId;
   title: string;
   content: string;
+  plainTextContent?: string;
   contentPreview: string;
   tags: string[];
   encryptedSessionKey: string;
@@ -45,6 +46,7 @@ const JournalEntrySchema = new Schema<IJournalEntry>(
     },
     title: { type: String, required: true },
     content: { type: String, required: true },
+    plainTextContent: { type: String, default: '' },
     contentPreview: { type: String, default: '' },
     tags: { type: [String], default: [] },
     encryptedSessionKey: { type: String, default: '' },

@@ -10,6 +10,7 @@ import { Colors, Fonts, FontSizes, Space, Radius, MOOD_CONFIG, type MoodType } f
 import { useHaptics } from '../../hooks/useHaptics';
 import { format } from 'date-fns';
 import Toast from 'react-native-toast-message';
+import { useState } from 'react';
 
 interface ReflectionData {
   _id: string;
@@ -44,18 +45,66 @@ export default function ReflectionScreen() {
     queryFn:  () => reflectionApi.list(),
   });
 
+  const [fallbackReflection, setFallbackReflection] =
+  useState<string | null>(null);
+
   const { mutate: generate, isPending: generating } = useMutation({
-    mutationFn: () => reflectionApi.generate(),
-    onSuccess: () => {
+    mutationFn: () => reflectionApi.generate({ forceRegenerate: Boolean(reflection) }),
+    onSuccess: (res) => {
+      console.log('[MobileReflection] generate success', {
+        status: res.status,
+        reflectionId: res.data?.data?.reflection?._id,
+        entriesAnalyzed: res.data?.data?.reflection?.entriesAnalyzed,
+      });
       qc.invalidateQueries({ queryKey: ['reflection-latest-mobile'] });
       qc.invalidateQueries({ queryKey: ['reflections-mobile'] });
       haptics.success();
       Toast.show({ type: 'success', text1: 'Your reflection is ready' });
     },
     onError: (err: unknown) => {
+      console.error('[MobileReflection] generate error', {
+        status: (err as { response?: { status?: number } })?.response?.status,
+        message:
+          (err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          })?.response?.data?.message ||
+          (err as { message?: string })?.message,
+        data: (err as { response?: { data?: unknown } })?.response?.data,
+      });
+
+      const moodMessage =
+        activeMood === 'calm'
+          ? 'You seemed to seek balance and quiet moments this week.'
+          : activeMood === 'hopeful'
+          ? 'There were signs of optimism and forward movement this week.'
+          : activeMood === 'reflective'
+          ? 'You spent time thinking deeply about your experiences.'
+          : 'This week may have felt emotionally demanding at times.';
+
+      setFallbackReflection(`
+    ${moodMessage}
+
+    AI reflection is temporarily unavailable.
+
+    Take a few minutes to look back at your journal entries and consider:
+
+    • What moments stood out this week?
+    • Which emotions appeared most often?
+    • What challenged you?
+    • What are you grateful for?
+    • What would you like to improve next week?
+
+    Your reflections matter, and every entry contributes to your growth.
+      `.trim());
+
       haptics.error();
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      Toast.show({ type: 'error', text1: msg ?? 'Could not generate reflection' });
+
+      Toast.show({
+        type: 'info',
+        text1: 'AI reflection unavailable',
+        text2: 'Showing a guided reflection instead.',
+      });
     },
   });
 

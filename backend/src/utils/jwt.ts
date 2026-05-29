@@ -71,14 +71,14 @@ export const revokeAllUserTokens = async (
   await RefreshToken.deleteMany({ userId });
 };
 
-// ── PASSWORD RESET TOKEN ──
+// PASSWORD RESET TOKEN
 export const generateResetToken = (): { raw: string; hashed: string } => {
   const raw = crypto.randomBytes(32).toString('hex');
   const hashed = crypto.createHash('sha256').update(raw).digest('hex');
   return { raw, hashed };
 };
 
-// ── COOKIE OPTIONS ──
+// COOKIE OPTIONS
 export const getRefreshCookieOptions = () => ({
   httpOnly: true,
   secure: env.NODE_ENV === 'production',

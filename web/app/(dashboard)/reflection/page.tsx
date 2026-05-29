@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reflectionApi } from '@/lib/api';
 import { useMoodStore, MOOD_CONFIG } from '@/store/moodStore';
@@ -13,6 +14,7 @@ export default function ReflectionPage() {
   const { activeMood } = useMoodStore();
   const config = MOOD_CONFIG[activeMood];
   const qc = useQueryClient();
+  const [fallbackReflection, setFallbackReflection] = useState<string | null>(null);
 
   const { data: latestData, isLoading } = useQuery({
     queryKey: ['reflection-latest'],
@@ -25,14 +27,50 @@ export default function ReflectionPage() {
   });
 
   const { mutate: generate, isPending: generating } = useMutation({
-    mutationFn: () => reflectionApi.generate(),
-    onSuccess: () => {
+    mutationFn: () => reflectionApi.generate({ forceRegenerate: Boolean(reflection) }),
+    onSuccess: (res) => {
+      console.log('[WebReflection] generate success', {
+        status: res.status,
+        reflectionId: res.data?.data?.reflection?._id,
+        entriesAnalyzed: res.data?.data?.reflection?.entriesAnalyzed,
+      });
       qc.invalidateQueries({ queryKey: ['reflection-latest'] });
       qc.invalidateQueries({ queryKey: ['reflections'] });
       toast.success('Your reflection is ready');
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || 'Could not generate reflection');
+      console.error('[WebReflection] generate error', {
+        status: err?.response?.status,
+        message: err?.response?.data?.message || err?.message,
+        data: err?.response?.data,
+      });
+
+      const moodMessage =
+        activeMood === 'calm'
+          ? 'You seemed to seek balance and quiet moments this week.'
+          : activeMood === 'hopeful'
+          ? 'There were signs of optimism and forward movement this week.'
+          : activeMood === 'reflective'
+          ? 'You spent time thinking deeply about your experiences.'
+          : 'This week may have felt emotionally demanding at times.';
+
+      setFallbackReflection(`
+    ${moodMessage}
+
+    AI reflection is temporarily unavailable.
+
+    Take a few moments to look back on your journal entries and ask yourself:
+
+    • What moments stood out this week?
+    • Which emotions appeared most often?
+    • What challenged me?
+    • What am I grateful for?
+    • What do I want to carry into next week?
+
+    Growth often comes from noticing patterns, not finding perfect answers.
+      `.trim());
+
+      toast.success('Showing guided reflection');
     },
   });
 

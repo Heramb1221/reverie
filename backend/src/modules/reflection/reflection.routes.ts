@@ -29,7 +29,22 @@ const getOne = async (req: Request, res: Response, next: NextFunction): Promise<
 
 const generate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const reflection = await reflectionService.generateReflection(req.user!.userId);
+    const requestId = `refl_route_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const forceRegenerate = Boolean(req.body?.forceRegenerate || req.query.forceRegenerate === 'true');
+    console.log(`[ReflectionRoute][${requestId}] incoming request`, {
+      userId: req.user!.userId,
+      forceRegenerate,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+    const reflection = await reflectionService.generateReflection(req.user!.userId, {
+      forceRegenerate,
+      requestId,
+    });
+    console.log(`[ReflectionRoute][${requestId}] api response`, {
+      reflectionId: reflection._id.toString(),
+      entriesAnalyzed: reflection.entriesAnalyzed,
+    });
     sendSuccess(res, { reflection }, 'Reflection generated', 201);
   } catch (error) { next(error); }
 };

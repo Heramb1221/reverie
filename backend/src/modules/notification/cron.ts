@@ -4,7 +4,7 @@ import { User } from '../../models/User.js';
 import { JournalEntry } from '../../models/JournalEntry.js';
 import { sendReminderEmail } from '../../utils/email.js';
 
-// ── WEEKLY REFLECTION GENERATION ──
+// WEEKLY REFLECTION GENERATION
 // Every Sunday at 9 PM UTC
 export const weeklyReflectionCron = cron.schedule('0 21 * * 0', async () => {
   console.log('[CRON] Starting weekly reflection generation...');
@@ -15,7 +15,7 @@ export const weeklyReflectionCron = cron.schedule('0 21 * * 0', async () => {
   }
 }, { scheduled: false });
 
-// ── JOURNAL REMINDER EMAILS ──
+// JOURNAL REMINDER EMAILS
 // Every day at 7 PM UTC — check users who haven't written recently
 export const reminderCron = cron.schedule('0 19 * * *', async () => {
   console.log('[CRON] Checking journal reminders...');

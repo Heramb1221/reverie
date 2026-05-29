@@ -45,10 +45,10 @@ const PROMPTS = [
 
 export default function HomePage() {
 
-  // ── AUTH ──
+  // AUTH
   const { user, hydrated } = useAuthStore();
 
-  // ── MOOD ──
+  // MOOD
   const activeMood =
     useMoodStore((state) => state.activeMood) || 'calm';
 
@@ -58,7 +58,7 @@ export default function HomePage() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ── IMPORTANT: WAIT FOR ZUSTAND HYDRATION ──
+  // IMPORTANT: WAIT FOR ZUSTAND HYDRATION
   if (!hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface)]">
@@ -69,11 +69,11 @@ export default function HomePage() {
     );
   }
 
-  // ── RANDOM PROMPT ──
+  // RANDOM PROMPT
   const prompt =
     PROMPTS[new Date().getDay() % PROMPTS.length];
 
-  // ── QUERIES ──
+  // QUERIES
   const {
     data: journalData,
     isLoading: loadingJournals,
@@ -96,7 +96,7 @@ export default function HomePage() {
     queryFn: () => reflectionApi.latest(),
   });
 
-  // ── DATA ──
+  // DATA
   const entries =
     journalData?.data?.data?.entries || [];
 
@@ -106,7 +106,7 @@ export default function HomePage() {
   const reflection =
     reflectionData?.data?.data?.reflection;
 
-  // ── ENTRANCE ANIMATION ──
+  // ENTRANCE ANIMATION
   useEffect(() => {
     const el = containerRef.current;
 
@@ -139,7 +139,7 @@ export default function HomePage() {
       className="relative z-10 space-y-8 pb-16"
     >
 
-      {/* ───────────────── HEADER ───────────────── */}
+      {/* HEADER */}
       <header className="reveal-home">
         <p className="text-label mb-1">
           {getGreeting()}
@@ -161,7 +161,7 @@ export default function HomePage() {
         </p>
       </header>
 
-      {/* ───────────────── QUICK WRITE ───────────────── */}
+      {/* QUICK WRITE */}
       <div className="reveal-home">
         <Link
           href="/journal/new"
@@ -203,7 +203,7 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* ───────────────── STATS ───────────────── */}
+      {/* STATS */}
       <div className="reveal-home grid grid-cols-3 gap-4">
         {[
           {
@@ -249,7 +249,7 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* ───────────────── REFLECTION ───────────────── */}
+      {/* REFLECTION */}
       {reflection && (
         <div className="reveal-home">
           <Link
@@ -297,7 +297,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ───────────────── RECENT ENTRIES ───────────────── */}
+      {/* RECENT ENTRIES */}
       <section className="reveal-home">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-[18px] font-medium text-[var(--color-text-primary)]">
@@ -338,7 +338,7 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* ───────────────── QUICK ACTIONS ───────────────── */}
+      {/* QUICK ACTIONS */}
       <section className="reveal-home">
         <div className="grid grid-cols-2 gap-3">
           <Link

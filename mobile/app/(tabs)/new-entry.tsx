@@ -97,6 +97,7 @@ export default function NewEntryScreen() {
       journalApi.create({
         title:          title.trim() || `Entry — ${new Date().toLocaleDateString()}`,
         content,
+        plainTextContent: content,
         contentPreview: content.replace(/<[^>]*>/g, '').slice(0, 200),
         mood,
         wordCount,
@@ -123,7 +124,6 @@ export default function NewEntryScreen() {
 
   const canSave = content.trim().length > 0 && !isPending;
 
-  // ── STEP 1: MOOD ──────────────────────────────────────────
   if (step === 'mood') {
     return (
       <View style={[s.root, { paddingTop: insets.top }]}>
@@ -153,7 +153,6 @@ export default function NewEntryScreen() {
     );
   }
 
-  // ── STEP 2: WRITE ─────────────────────────────────────────
   return (
     <KeyboardAvoidingView
       style={[s.root, { paddingTop: insets.top }]}
@@ -260,14 +259,14 @@ const s = StyleSheet.create({
   saveBtn:        { paddingHorizontal: Space[4], paddingVertical: Space[2], borderRadius: Radius.full },
   saveBtnDisabled:{ opacity: 0.45 },
   saveBtnText:    { fontFamily: Fonts.sansMedium, fontSize: FontSizes.sm, color: '#fff' },
-  // Mood step
+  
   moodStep:       { padding: Space[5], gap: Space[5] },
   stepLabel:      { fontFamily: Fonts.mono, fontSize: FontSizes.xs, letterSpacing: 2, textTransform: 'uppercase', color: Colors.textGhost },
   stepTitle:      { fontFamily: Fonts.displayMedium, fontSize: FontSizes['2xl'], color: Colors.textPrimary, letterSpacing: -0.5 },
   moodGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: Space[3] },
   nextBtn:        { borderRadius: Radius.full, paddingVertical: Space[4], alignItems: 'center' },
   nextBtnText:    { fontFamily: Fonts.sansMedium, fontSize: FontSizes.base, color: '#fff' },
-  // Write step
+
   writeStep:      { padding: Space[5] },
   moodBadge:      { flexDirection: 'row', alignItems: 'center', gap: Space[2], alignSelf: 'flex-start',
                     paddingHorizontal: Space[3], paddingVertical: Space[2], borderRadius: Radius.full,

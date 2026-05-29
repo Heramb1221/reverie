@@ -37,7 +37,6 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const { hydrate, hydrated } = useAuthStore();
 
-  // Load fonts — removed DMSans_300Light (not exported by the package)
   const [fontsLoaded] = useFonts({
     PlayfairDisplay_400Regular,
     PlayfairDisplay_500Medium,

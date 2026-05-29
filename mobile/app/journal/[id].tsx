@@ -76,6 +76,7 @@ export default function JournalDetailScreen() {
       journalApi.update(id as string, {
         title,
         content,
+        plainTextContent: content,
         contentPreview: content.slice(0, 200),
         mood,
         wordCount: content.trim().split(/\s+/).filter(Boolean).length,

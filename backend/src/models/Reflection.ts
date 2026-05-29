@@ -16,7 +16,7 @@ export interface IReflection extends Document {
   entriesAnalyzed: number;
   dominantMood: MoodType | null;
   moodDistribution: IMoodDistribution;
-  content: string;        // Gemini-generated text (stored encrypted)
+  content: string;
   encryptedSessionKey: string;
   iv: string;
   promptUsed: string;

@@ -92,7 +92,7 @@ export function JournalCard({
   );
 }
 
-// ── SKELETON ──
+// SKELETON
 export function JournalCardSkeleton() {
   return (
     <div className="glass rounded-2xl p-5 border border-[var(--color-glass-border)]">
