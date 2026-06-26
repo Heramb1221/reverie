@@ -202,7 +202,7 @@ export default function ReflectionPage() {
               ? <Loader2 size={13} className="animate-spin" />
               : <RefreshCw size={13} />
             }
-            {generating ? 'Reflecting on your week…' : 'Regenerate this week&apos;s reflection'}
+            {generating ? 'Reflecting on your week…' : 'Regenerate this weeks reflection'}
           </button>
         </div>
       )}
