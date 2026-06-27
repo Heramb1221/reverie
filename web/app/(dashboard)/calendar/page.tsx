@@ -104,7 +104,7 @@ export default function CalendarPage() {
                   'transition-all duration-150 hover:bg-[var(--color-border)] rounded-xl m-0.5',
                   selected && 'ring-1 ring-offset-0',
                 )}
-                style={selected ? { ringColor: config.colorHex } : {}}
+                style={selected ? { '--tw-ring-color': config.colorHex } as React.CSSProperties : {}}
               >
                 <span className={cn(
                   'text-[12px] font-mono leading-none',
