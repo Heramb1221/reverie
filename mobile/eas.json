@@ -1,0 +1,14 @@
+{
+  "cli": {
+    "version": ">= 7.6.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {}
+  }
+}

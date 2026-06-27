@@ -6,10 +6,18 @@
     "orientation": "portrait",
     "scheme": "reverie",
     "userInterfaceStyle": "automatic",
-    "splash": { "backgroundColor": "#F4F2EE" },
-    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "backgroundColor": "#F4F2EE"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
-      "apiUrl": "http://localhost:5000/api/v1"
+      "apiUrl": "https://reverie-6acv.onrender.com/api/v1",
+      "router": {},
+      "eas": {
+        "projectId": "0ad101e3-5d6c-4524-a1a1-f52c2416a987"
+      }
     },
     "ios": {
       "supportsTablet": false,
@@ -21,13 +29,18 @@
       }
     },
     "android": {
-      "adaptiveIcon": { "backgroundColor": "#F4F2EE" },
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F2EE"
+      },
       "package": "app.reverie.journal",
       "permissions": [
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE"
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -37,9 +50,13 @@
       "expo-local-authentication",
       [
         "expo-image-picker",
-        { "photosPermission": "Reverie needs access to choose photos for your journal." }
+        {
+          "photosPermission": "Reverie needs access to choose photos for your journal."
+        }
       ]
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

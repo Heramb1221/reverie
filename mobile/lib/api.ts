@@ -8,7 +8,7 @@ import { Platform } from 'react-native';
 import { storage } from './storage';
 
 const BASE_URL =
-  'http://localhost:5000/api/v1';
+  Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5000/api/v1';
 
 export const api = axios.create({
   baseURL: BASE_URL,
