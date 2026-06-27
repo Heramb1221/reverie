@@ -8,6 +8,14 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'gsap'],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: 'https://reverie-6acv.onrender.com/api/v1/:path*',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
