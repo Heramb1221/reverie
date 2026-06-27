@@ -82,7 +82,7 @@ export const generateResetToken = (): { raw: string; hashed: string } => {
 export const getRefreshCookieOptions = () => ({
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: (env.NODE_ENV === 'production' ? 'none' : 'lax') as const,
+  sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   path: '/',
 });
@@ -90,6 +90,6 @@ export const getRefreshCookieOptions = () => ({
 export const getClearCookieOptions = () => ({
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: (env.NODE_ENV === 'production' ? 'none' : 'lax') as const,
+  sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
   path: '/',
 });
